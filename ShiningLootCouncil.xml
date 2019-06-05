@@ -1,6 +1,6 @@
 ﻿<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
-	<Script file="MasterLootManager.lua"></Script>
+	<Script file="ShiningLootCouncil.lua"></Script>
 	<Button name="SelectionButtonTemplate" parent="UIParent" virtual="true">
 		<Size><AbsDimension y="32" /></Size>
 		<Anchors>
@@ -13,7 +13,7 @@
 		</Anchors>
 		<Scripts>
 			<OnClick>
-				MasterLootManager:SelectionButtonClicked(self)
+				ShiningLootCouncil:SelectionButtonClicked(self)
 			</OnClick>
 		</Scripts>
 		<Layers>
@@ -65,7 +65,7 @@
 		</Anchors>
 		<Scripts>
 			<OnClick>
-				MasterLootManager:PlayerSelectionButtonClicked(self)
+				ShiningLootCouncil:PlayerSelectionButtonClicked(self)
 			</OnClick>
 		</Scripts>
 		<Layers>
@@ -171,7 +171,7 @@
 		</HighlightTexture>
 	</Button>
 	
-	<Frame name="MasterLootManagerMain" parent="UIParent" hidden="true"
+	<Frame name="ShiningLootCouncilMain" parent="UIParent" hidden="true"
 		enableMouse="true" movable="true">
 		<Size>
 			<!--<AbsDimension x="309" y="305" />-->
@@ -206,7 +206,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:CountdownClicked(self)
+						ShiningLootCouncil:CountdownClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -219,7 +219,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:AnnounceMainSpecClicked(self)
+						ShiningLootCouncil:AnnounceMainSpecClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -232,7 +232,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:AnnounceOffSpecClicked(self)
+						ShiningLootCouncil:AnnounceOffSpecClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -245,7 +245,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:AnnounceNoSpecClicked(self)
+						ShiningLootCouncil:AnnounceNoSpecClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -258,7 +258,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:AnnounceLootClicked(self)
+						ShiningLootCouncil:AnnounceLootClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -271,7 +271,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:SelectItemClicked(self)
+						ShiningLootCouncil:SelectItemClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -301,7 +301,7 @@
 				  </Frame>
 				</ScrollChild>
 			</ScrollFrame>
-			  <Slider name="$parent_Slider" parent="MasterLootManagerMain_ScrollFrame" minValue="0" maxValue="100" defaultValue="0" inherits="UIPanelScrollBarTemplate">
+			  <Slider name="$parent_Slider" parent="ShiningLootCouncilMain_ScrollFrame" minValue="0" maxValue="100" defaultValue="0" inherits="UIPanelScrollBarTemplate">
 				<Size>
 				  <AbsDimension x="16" y="23"/>
 				</Size>
@@ -329,7 +329,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:AwardLootClicked(self)
+						ShiningLootCouncil:AwardLootClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -343,7 +343,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:SettingsClicked(self)
+						ShiningLootCouncil:SettingsClicked(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -358,7 +358,7 @@
                 <FontString inherits="ChatFontNormal"/>
                 <Scripts>
                     <OnLoad>
-                        MasterLootManager.deDropdownFrame = this
+                        ShiningLootCouncil.deDropdownFrame = this
                     </OnLoad>
                 </Scripts>
             </Frame>
@@ -372,7 +372,7 @@
                 <FontString inherits="ChatFontNormal"/>
                 <Scripts>
                     <OnLoad>
-                        MasterLootManager.bankDropdownFrame = this
+                        ShiningLootCouncil.bankDropdownFrame = this
                     </OnLoad>
                 </Scripts>
             </Frame>
@@ -386,7 +386,7 @@
                 </Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:RollForSelf(self)
+						ShiningLootCouncil:RollForSelf(self)
 					</OnClick>
 				</Scripts>
 			</Button>-->
@@ -400,7 +400,7 @@
                 </Anchors>
 				<Scripts>
 					<OnClick>
-						MasterLootManager:ClearRollList(self)
+						ShiningLootCouncil:ClearRollList(self)
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -516,7 +516,7 @@
 		
 		<Scripts>
 			<OnLoad>
-				MasterLootManager:OnLoad(self)
+				ShiningLootCouncil:OnLoad(self)
 			</OnLoad>
 			<OnDragStart>
 				self:StartMoving()
@@ -530,7 +530,7 @@
             </OnClick>
             -->
 			<OnUpdate>
-				MasterLootManager:OnUpdate()
+				ShiningLootCouncil:OnUpdate()
 			</OnUpdate>
 		</Scripts>
 	</Frame>
