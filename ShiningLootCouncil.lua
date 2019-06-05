@@ -24,7 +24,7 @@ ShiningLootCouncil = {
     lastUpdate = 0,
     starTexture = "Interface\\TargetingFrame\\UI-RaidTargetingIcons",
     queryingPlayer = false,
-    inspectFrequency = 1,
+    inspectFrequency = 5,
     lastInspect = 0,
     inspectIndex = 0,
     inspectTargetName,
@@ -123,7 +123,8 @@ function ShiningLootCouncil:SelectionButtonClicked(buttonFrame)
 end
 
 function ShiningLootCouncil:PlayerTalentSpec(unit)
-	if UnitName(unit) == UnitName("player") then
+	local name = UnitName(unit)
+	if name == UnitName("player") then
 		local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
 
 		for i = 1, MAX_TALENT_TABS do
@@ -139,8 +140,20 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 
 		if totalPoints < 61 then return end
 
-		if specName then self.raidSpecs[UnitName(unit)] = specName end
-		if specIcon then self.specIcons[specName] = specIcon end
+		--if specName then self.raidSpecs[name] = specName end
+		if specName then
+			if not self.raidSpecs[name] then
+				self.raidSpecs[name] = {}
+			end
+			table.insert(self.raidSpecs[name], specName)
+		end
+		if specIcon then
+			if not self.specIcons[specName] then
+				self.specIcons[specName] = {}
+			end
+			--self.specIcons[specName] = specIcon
+			table.insert(self.specIcons[specName], specIcon)
+		end
 	else
 		local canInspect = CheckInteractDistance(unit, 1); -- check if we're close enough to inspect them.
 		if canInspect and CanInspect(unit) then
@@ -294,7 +307,7 @@ SlashCmdList["SLC"] = function(msg, editBox)
         ShiningLootCouncil.frame:Hide()
     elseif command == "talents" then
     	for k,v in pairs(ShiningLootCouncil.raidSpecs) do
-    		ShiningLootCouncil:Print(k .. " - " .. v)
+    		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
     elseif command == "ilvl" then
     	for k,v in pairs(SLCTable.itemlevels) do
@@ -349,6 +362,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 			self.frame:Show()
 		else
 			self.frame:Hide()
+			collectgarbage("collect")
 		end
 	elseif event == "CHAT_MSG_RAID_LEADER" or event == "CHAT_MSG_RAID" or event == "CHAT_MSG_PARTY" then
 		if SLCTable.lootCount > 0 then
@@ -378,10 +392,18 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 		ClearInspectPlayer()
 
 		if self.raidSpecs and self.inspectTargetName and specName then
-			self.raidSpecs[self.inspectTargetName] = specName
+			if not self.raidSpecs[self.inspectTargetName] then
+				self.raidSpecs[self.inspectTargetName] = {}
+			end
+			--self.raidSpecs[self.inspectTargetName] = specName
+			table.insert(self.raidSpecs[self.inspectTargetName], specName)
 		end
-		if self.specIcons and specIcon and specName then
-			self.specIcons[specName] = specIcon
+		if specIcon then
+			if not self.specIcons[specName] then
+				self.specIcons[specName] = {}
+			end
+			--self.specIcons[specName] = specIcon
+			table.insert(self.specIcons[specName], specIcon)
 		end
 		self.queryingPlayer = false
 		self.inspectTargetName = nil
@@ -574,7 +596,7 @@ function SLCRolls:GetPlayerGuildRank(index)
 end
 
 function SLCRolls:GetPlayerRole(name)
-	return ShiningLootCouncil.raidRoles[ShiningLootCouncil.raidSpecs[name]] or "not found"
+	return ShiningLootCouncil.raidRoles[ShiningLootCouncil.raidSpecs[name][math.ceil(#ShiningLootCouncil.raidSpecs[name]/2)]] or "not found"
 end
 
 function SLCRolls:GetItemIlvl(index)
@@ -585,9 +607,9 @@ function SLCRolls:GetPlayerItemlevelDifference(index)
 	return (SLCTable.itemlevel - self.items[index].itemIlvl)
 end
 
-function SLCRolls:GetPlayerIlvl(index)
+--[[function SLCRolls:GetPlayerIlvl(index)
 	return self.items[index].playerIlvl
-end
+end]]
 
 function SLCRolls:GetPlayerVotes(index)
 	return self.items[index].votes
@@ -682,7 +704,9 @@ function SLCRolls:UpdateRollList()
 			texture:SetTexCoord(0,0.25,0,0.25)
 		else
 			texture:Show()
-			texture:SetTexture(ShiningLootCouncil.specIcons[ShiningLootCouncil.raidSpecs[playerName]],true)
+			-- the table with all the icon paths for that spec
+			local specIconsTable = ShiningLootCouncil.specIcons[ShiningLootCouncil.raidSpecs[playerName][math.ceil(#ShiningLootCouncil.raidSpecs[playerName]/2)]]
+			texture:SetTexture(specIconsTable[math.ceil(#specIconsTable/2)],true)
 			texture:SetSize(16,16)
 			texture:SetTexCoordModifiesRect(false) -- hmm
 			--texture:SetScale(0.5) --error
@@ -704,7 +728,7 @@ function SLCRolls:UpdateRollList()
 		playerRoleLabel:SetText(playerRole)
 
 		-- player item level
-		local playerIlvl = self:GetPlayerIlvl(i)
+		local playerIlvl = SLCTable:GetPlayerIlvl(i)
 		local playerIlvlLabel = getglobal(buttonName .. "_PlayerItemlevel")
 		playerIlvlLabel:SetText(playerIlvl)
 
@@ -988,6 +1012,7 @@ function ShiningLootCouncil:OnUpdate()
 			self:PlayerTalentSpec("raid"..self.inspectIndex)
 		else
 			self.lastInspect = GetTime()
+			self.inspectIndex = 0
 		end
 	end
 end
