@@ -5,7 +5,7 @@
 ]]
 
 notifiedNewVersion = false
-notifiedNewVersionDate
+notifiedNewVersionDate = nil
 
 ShiningLootCouncil = {
 	frame = nil,
@@ -278,7 +278,7 @@ function ShiningLootCouncil:OnLoad(frame)
 	self:DebugPrint("ShiningLootCouncil loaded")
 end
 
-SLASH_MLM1 = "/slc"
+SLASH_SLC1 = "/slc"
 SlashCmdList["SLC"] = function(msg, editBox)
     local command, rest = msg:match("^(%S*)%s*(.-)$");
 
@@ -298,7 +298,7 @@ SlashCmdList["SLC"] = function(msg, editBox)
     	end
     elseif command == "ilvl" then
     	for k,v in pairs(SLCTable.itemlevels) do
-    		ShiningLootCouncil:Print(k .. " - " .. v)
+    		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
     else
         ShiningLootCouncil:Print("Acceptable subcommands to /slc:".."\nshow - shows the roll window".."\nhide - hides the roll window")
@@ -431,7 +431,8 @@ function ShiningLootCouncil:HandlePossibleRoll(message,sender)
 					guildRank = guildRankName or "not found",
 					role = SLCRolls:GetPlayerRole(sender), 
 					votes = 0,
-					ilvl = SLCTable.itemlevels[sender] or 0,
+					--ilvl = SLCTable.itemlevels[sender] or 0,
+					ilvl = SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] or 0,
 					note = msg or ""
 				}
 				item = {
@@ -494,6 +495,16 @@ function SLCRolls:GetPlayerIndex(name)
 	return 0
 end
 
+function ShiningLootCouncil:Count(table,element)
+	local c = 0
+	for i = 1, #table do
+		if table[i] == element then
+			c = c + 1
+		end
+	end
+	return c
+end
+
 -- Function taken from ElvUI tooltip.lua
 function SLCTable:GetAllPlayersIlvl()
 	for i = 1, 40 do
@@ -512,7 +523,10 @@ function SLCTable:GetAllPlayersIlvl()
 			end 
 			total = total/item
 			if total > 0 then
-				self.itemlevels[player] = tonumber(math.floor(total))
+				if not self.itemlevels[player] then
+					self.itemlevels[player] = {}
+				end
+				table.insert(self.itemlevels[player],tonumber(math.floor(total)))
 			end
 		end
 	end
@@ -544,7 +558,7 @@ end
 
 function SLCTable:GetPlayerIlvl(index)
 	local name = SLCRolls:GetPlayerName(index)
-	return self.itemlevels[name]
+	return self.itemlevels[name][math.ceil(#self.itemlevels[name]/2)]
 end
 
 function SLCRolls:GetPlayerName(index)
