@@ -1,0 +1,537 @@
+﻿<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Script file="MasterLootManager.lua"></Script>
+	<Button name="SelectionButtonTemplate" parent="UIParent" virtual="true">
+		<Size><AbsDimension y="32" /></Size>
+		<Anchors>
+			<Anchor point="RIGHT">
+				<Offset x="-5" y="0" />
+			</Anchor>
+			<Anchor point="LEFT">
+				<Offset x="5" y="0" />
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				MasterLootManager:SelectionButtonClicked(self)
+			</OnClick>
+		</Scripts>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture name="$parent_ItemTexture" file="">
+					<Size>
+						<AbsDimension x="32" y="32" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="7" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parent_ItemLink" inherits="GameFontNormalSmall"
+					justifyH="LEFT" text="No item selected">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_ItemTexture">
+							<Offset x="5" y="0" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture>
+			<Anchors>
+				<Anchor point="TOPLEFT" relativePoint="TOPLEFT" />
+				<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" />
+			</Anchors>
+			<Color r="1" g="1" b="1" a="1" />
+			<Gradient orientation="HORIZONTAL">
+				<MinColor r="1" g="1" b="1" a=".05" />
+				<MaxColor r="1" g="1" b="1" a=".2" />
+			</Gradient>
+		</HighlightTexture>
+	</Button>
+	<Button name="PlayerSelectionButtonTemplate" parent="UIParent" virtual="true">
+		<Size><AbsDimension y="20" /></Size>
+		<Anchors>
+			<Anchor point="RIGHT">
+				<Offset x="-5" y="120" />
+			</Anchor>
+			<Anchor point="LEFT">
+				<Offset x="5" y="120" />
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				MasterLootManager:PlayerSelectionButtonClicked(self)
+			</OnClick>
+		</Scripts>
+		<Layers>
+			<!-- The values that appear for each player's entry in the loot table -->
+			<Layer level="ARTWORK">
+				<Texture name="$parent_Texture" file="Interface\TargetingFrame\UI-RaidTargetingIcons">
+					<Size>
+						<AbsDimension x="16" y="16" />
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="LEFT">
+							<Offset>
+								<AbsDimension x="0" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="0.25" />
+				</Texture>
+				<FontString name="$parent_PlayerName" inherits="GameFontNormalSmall"
+					justifyH="LEFT" text="Not Found" relativeTo="$parent_Texture">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT">
+							<Offset x="18" y="17" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerItem" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="Not Found">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerName">
+							<Offset x="90" y="12" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerGuildRank" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="Not Found">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItem">
+							<Offset x="180" y="12" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerRole" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="Not Found">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerGuildRank">
+							<Offset x="85" y="12" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerItemlevel" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="Not Found">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerRole">
+							<Offset x="75" y="12" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerItemlevelDifference" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="Not Found">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItemlevel">
+							<Offset x="50" y="12" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerVotes" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="0">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="CENTER" relativeTo="$parent_PlayerItemlevelDifference">
+							<Offset x="50" y="6" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerNote" inherits="GameFontNormalSmall"
+					justifyH="RIGHT" text="">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerVotes">
+							<Offset x="50" y="12" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture>
+			<Anchors>
+				<Anchor point="TOPLEFT" relativePoint="TOPLEFT" />
+				<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" />
+			</Anchors>
+			<Color r="1" g="1" b="1" a="1" />
+			<Gradient orientation="HORIZONTAL">
+				<MinColor r="1" g="1" b="1" a=".05" />
+				<MaxColor r="1" g="1" b="1" a=".2" />
+			</Gradient>
+		</HighlightTexture>
+	</Button>
+	
+	<Frame name="MasterLootManagerMain" parent="UIParent" hidden="true"
+		enableMouse="true" movable="true">
+		<Size>
+			<!--<AbsDimension x="309" y="305" />-->
+			<AbsDimension x="1000" y="450" />
+		</Size>
+		<Anchors>
+			<Anchor point="RIGHT" relativePoint="RIGHT">
+				<Offset x="-10" y="0" />
+			</Anchor>
+		</Anchors>
+		
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
+			edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+			<TileSize>
+				<AbsValue val="10" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="10" />
+			</EdgeSize>
+			<BackgroundInsets>
+				<AbsInset top="3" left="3" right="3" bottom="3" />
+			</BackgroundInsets>
+			<Color r="0" g="0" b="0" a="1" />
+		</Backdrop>
+		<Frames>
+			<Button name="$parent_Countdown" inherits="UIPanelButtonTemplate" text="Countdown">
+				<Size><AbsDimension x="95" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT">
+						<Offset x="-110" y="-10" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:CountdownClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_AnnounceMainSpec" inherits="UIPanelButtonTemplate" text="M">
+				<Size><AbsDimension x="25" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_Countdown">
+						<Offset x="5" y="0" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:AnnounceMainSpecClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_AnnounceOffSpec" inherits="UIPanelButtonTemplate" text="O">
+				<Size><AbsDimension x="25" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_AnnounceMainSpec">
+						<Offset x="5" y="0" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:AnnounceOffSpecClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_AnnounceNoSpec" inherits="UIPanelButtonTemplate" text="D">
+				<Size><AbsDimension x="25" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_AnnounceOffSpec">
+						<Offset x="5" y="0" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:AnnounceNoSpecClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_AnnounceLoot" inherits="UIPanelButtonTemplate" text="Spam Loot">
+				<Size><AbsDimension x="95" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_AnnounceMainSpec">
+						<Offset x="0" y="-5" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:AnnounceLootClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_SelectItem" inherits="UIPanelButtonTemplate" text="Select Item">
+				<Size><AbsDimension x="95" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Countdown">
+						<Offset x="0" y="-5" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:SelectItemClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<ScrollFrame name="$parent_ScrollFrame" virtual="UIPanelScrollFrameTemplate">
+				<Anchors>
+				  <Anchor point="TOPLEFT">
+					<Offset>
+					  <AbsDimension x="10" y="-105"/>
+					</Offset>
+				  </Anchor>
+				  <Anchor point="BOTTOMRIGHT">
+					<Offset>
+					  <AbsDimension x="-40" y="90"/>
+					</Offset>
+				  </Anchor>
+				</Anchors>
+				<ScrollChild>
+				  <Frame name="$parent_ScrollChildFrame" setAllPoints="$parent">
+				   <!--<Size>
+					 <AbsDimension x="150" y="300"/>
+				   </Size>-->
+					<Anchors>
+					  <Anchor point="TOPLEFT"/>
+					  <Anchor point="BOTTOMRIGHT"/>
+					</Anchors>           
+				  </Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			  <Slider name="$parent_Slider" parent="MasterLootManagerMain_ScrollFrame" minValue="0" maxValue="100" defaultValue="0" inherits="UIPanelScrollBarTemplate">
+				<Size>
+				  <AbsDimension x="16" y="23"/>
+				</Size>
+
+				<Anchors>
+				  <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+					<Offset>
+					  <AbsDimension x="0" y="-16"/>
+					</Offset>
+				  </Anchor>
+				  <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT">
+					<Offset>
+					  <AbsDimension x="0" y="16"/>
+					</Offset>
+				  </Anchor>
+				</Anchors>
+			  </Slider>
+
+			<Button name="$parent_AwardLoot" inherits="UIPanelButtonTemplate" text="Award Loot">
+				<Size><AbsDimension x="95" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_ScrollFrame">
+						<Offset x="-5" y="-5" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:AwardLootClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+            
+            <Button name="$parent_Settings" inherits="UIPanelButtonTemplate" text="Settings">
+				<Size><AbsDimension x="95" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parent_AwardLoot">
+						<Offset x="5" y="0" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:SettingsClicked(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+            <Frame name="$parent_SelectDE">
+				<!--<Size><AbsDimension x="95" y="20" /></Size>-->
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_AwardLoot">
+						<Offset x="-15" y="-5" />
+					</Anchor>
+				</Anchors>
+                <FontString inherits="ChatFontNormal"/>
+                <Scripts>
+                    <OnLoad>
+                        MasterLootManager.deDropdownFrame = this
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+			
+            <Frame name="$parent_SelectBank">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_SelectDE">
+                        <Offset x="0" y="5" />
+                    </Anchor>
+                </Anchors>
+                <FontString inherits="ChatFontNormal"/>
+                <Scripts>
+                    <OnLoad>
+                        MasterLootManager.bankDropdownFrame = this
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+ 			
+			<!--<Button name="$parent_RollForSelf" inherits="UIPanelButtonTemplate" text="/Roll">
+				<Size><AbsDimension x="95" y="20" /></Size>
+                <Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_AwardLoot">
+						<Offset x="0" y="-20" />
+					</Anchor>
+                </Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:RollForSelf(self)
+					</OnClick>
+				</Scripts>
+			</Button>-->
+			
+			<Button name="$parent_ClearRollList" inherits="UIPanelButtonTemplate" text="Clear Rolls">
+				<Size><AbsDimension x="95" y="20" /></Size>
+                <Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Settings">
+						<Offset x="0" y="-20" />
+					</Anchor>
+                </Anchors>
+				<Scripts>
+					<OnClick>
+						MasterLootManager:ClearRollList(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+        
+		<Layers>
+			<!-- The item texture and the column values -->
+			<Layer level="ARTWORK">
+				<Texture name="$parent_CurrentItemTexture" file="">					
+					<Size>
+						<AbsDimension x="32" y="32" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="7" y="-25" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parent_CurrentItemLink" inherits="GameFontNormalSmall"
+					justifyH="LEFT" text="No item selected">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_CurrentItemTexture">
+							<Offset x="5" y="7" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_CurrentItemIlvl" inherits="GameFontNormalSmall"
+					justifyH="LEFT" text="Itemlevel: ?">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_CurrentItemTexture">
+							<Offset x="5" y="-7" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerLabel" inherits="GameFontNormalSmall" justifyH="LEFT" text="Player">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_CurrentItemTexture">
+							<Offset x="24" y="-10" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="100" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_ItemDrop" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Item">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerLabel">
+							<Offset x="90" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="150" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_GuildRankLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Rank">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_ItemDrop">
+							<Offset x="180" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="50" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_RaidRoleLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Role">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_GuildRankLabel">
+							<Offset x="85" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="50" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_PlayerItemlevelLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Ilvl">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_RaidRoleLabel">
+							<Offset x="75" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="50" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_ItemlevelDifferenceLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Diff">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItemlevelLabel">
+							<Offset x="50" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="50" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_VotesLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Votes">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_ItemlevelDifferenceLabel">
+							<Offset x="50" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="50" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+				<FontString name="$parent_NoteLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Note">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_VotesLabel">
+							<Offset x="50" y="12" />
+						</Anchor>
+					</Anchors>
+					<!--<Size><Absdimension x="50" /></Size>-->
+					<Color r="1" g="1" b="1" a="1" />
+				</FontString>
+			</Layer>
+		</Layers>
+		
+		<Scripts>
+			<OnLoad>
+				MasterLootManager:OnLoad(self)
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving()
+            </OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing()
+            </OnDragStop>
+			<!-- *causes error, does nothing*
+            <OnClick>
+				self:StartMoving()
+            </OnClick>
+            -->
+			<OnUpdate>
+				MasterLootManager:OnUpdate()
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+</Ui>
