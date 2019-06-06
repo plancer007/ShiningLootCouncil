@@ -9,7 +9,7 @@ notifiedNewVersionDate = nil
 
 ShiningLootCouncil = {
 	frame = nil,
-	debugging = true, 
+	debugging = nil, 
 	countdownRange = 10, 
 	countdownRunning = false,
     disenchant = nil,
@@ -261,7 +261,6 @@ function ShiningLootCouncil:OnLoad(frame)
 	self.frame:RegisterEvent("LOOT_CLOSED")
 	self.frame:RegisterEvent("CHAT_MSG_RAID")
 	self.frame:RegisterEvent("CHAT_MSG_RAID_LEADER")
-	self.frame:RegisterEvent("CHAT_MSG_PARTY")
 	self.frame:RegisterEvent("LOOT_SLOT_CLEARED")
     self.frame:RegisterEvent("RAID_ROSTER_UPDATE")
     self.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -364,7 +363,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 			self.frame:Hide()
 			collectgarbage("collect")
 		end
-	elseif event == "CHAT_MSG_RAID_LEADER" or event == "CHAT_MSG_RAID" or event == "CHAT_MSG_PARTY" then
+	elseif event == "CHAT_MSG_RAID_LEADER" or event == "CHAT_MSG_RAID" then
 		if SLCTable.lootCount > 0 then
 			local message = arg1
 			local sender = arg2
@@ -900,8 +899,9 @@ function SLCTable:ItemExists(index)
 end
 
 function SLCTable:GetItemLink(index)
-	if not index or not self.loot or not self.loot[index].itemLink then return end
- 	return self.loot[index].itemLink
+	if index and self.loot and self.loot[index] and self.loot[index].itemLink then
+ 		return self.loot[index].itemLink
+ 	end
 end
 
 function SLCTable:GetItemTexture(index)
