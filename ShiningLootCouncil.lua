@@ -9,22 +9,24 @@ notifiedNewVersionDate = nil
 
 ShiningLootCouncil = {
 	frame = nil,
+	constFrame = nil,
 	debugging = nil, 
 	countdownRange = 10, 
 	countdownRunning = false,
     disenchant = nil,
     bank = nil,
     dropdownData = {}, --TODO: change all instanaces of dropdown/Dropdown to dropDown/DropDown to match conventions
-    dropdownGroupData = {};
+    dropdownGroupData = {},
     deDropdownFrame = nil, 
     bankDropdownFrame = nil,
     settingsDropDownFrame = nil,
     settingsMenuList = nil,
-    updateFrequency = 5, -- how often to get player's gear data (in seconds)
+    updateFrequency = 1, -- how often to get player's gear data (in seconds)
     lastUpdate = 0,
     starTexture = "Interface\\TargetingFrame\\UI-RaidTargetingIcons",
     queryingPlayer = false,
-    inspectFrequency = 5,
+    inCombat = false,
+    inspectFrequency = 1, -- how often to inspect the players talents
     lastInspect = 0,
     inspectIndex = 0,
     inspectTargetName,
@@ -53,7 +55,18 @@ ShiningLootCouncil = {
    		["Discipline"]			= "Healer",
    		["Feral Combat"]		= "Tank/Damage"
 	},
-	specIcons = {}
+	specIcons = {},
+	raids = {
+		"Karazhan",
+		"Gruul's Lair",
+		"Serpentshrine Cavern",
+		"Magtheridon's Lair",
+		"Tempest Keep",
+		"Black Temple",
+		"Hyjal Summit",
+		"Zul'Aman",
+		"Sunwell Plateau",
+	}
 }
                      
 ShiningLootCouncilSettings = {
@@ -256,6 +269,7 @@ end
 
 function ShiningLootCouncil:OnLoad(frame)
 	self.frame = frame
+	self.constFrame = CreateFrame("Frame")
 	
 	self.frame:RegisterEvent("LOOT_OPENED")
 	self.frame:RegisterEvent("LOOT_CLOSED")
@@ -265,11 +279,15 @@ function ShiningLootCouncil:OnLoad(frame)
     self.frame:RegisterEvent("RAID_ROSTER_UPDATE")
     self.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self.frame:RegisterEvent("INSPECT_TALENT_READY")
+    self.frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self.frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	 
 	self.frame:SetScript("OnEvent", 
 			function(frame, event, ...)
 				self:OnEvent(self, event, ...)
 			end)
+
+	self.constFrame:SetScript("OnUpdate",self.OnUpdate)
 
 	self.frame:RegisterForDrag("LeftButton")
 	self.frame:SetClampedToScreen(true)
@@ -406,6 +424,12 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 		end
 		self.queryingPlayer = false
 		self.inspectTargetName = nil
+    elseif event == "PLAYER_REGEN_DISABLED" then
+    	if UnitLevel("target") < 0 or UnitLevel("targettarget") < 0 then
+    		self.inCombat = true
+    	end
+    elseif event == "PLAYER_REGEN_ENABLED" then
+    	self.inCombat = false
     end
 end
 
@@ -550,6 +574,10 @@ function SLCTable:GetAllPlayersIlvl()
 				table.insert(self.itemlevels[player],tonumber(math.floor(total)))
 			end
 		end
+	end
+
+	if #SLCTable.itemlevels >= 25 then
+		ShiningLootCouncil.updateFrequency = 60
 	end
 end
 
@@ -981,38 +1009,50 @@ function ShiningLootCouncil:CountdownClicked(buttonFrame)
 	self.countdownLastDisplayed = self.countdownRange + 1
 end
 
+function ShiningLootCouncil:CollectInfo()
+	if self.inCombat then return false end
+
+	local inRaid = false
+	for i = 1, #self.raids do
+		if self.raids[i] == GetRealZoneText() then inRaid = true end
+		break
+	end
+
+	if not inRaid then return false end
+end
+
 function ShiningLootCouncil:OnUpdate()
-	if (self.countdownRunning) then
-		local currentCountdownPosition = math.ceil(self.countdownRange - GetTime() + self.countdownStartTime)
+	if (ShiningLootCouncil.countdownRunning) then
+		local currentCountdownPosition = math.ceil(ShiningLootCouncil.countdownRange - GetTime() + ShiningLootCouncil.countdownStartTime)
 		if (currentCountdownPosition < 1) then
 			currentCountdownPosition = 1
 		end
-		local i = self.countdownLastDisplayed - 1
+		local i = ShiningLootCouncil.countdownLastDisplayed - 1
 		while (i >= currentCountdownPosition) do
-			self:Speak(i)
+			ShiningLootCouncil:Speak(i)
 			i = i - 1
 		end
 		
-		self.countdownLastDisplayed = currentCountdownPosition
+		ShiningLootCouncil.countdownLastDisplayed = currentCountdownPosition
 		if (currentCountdownPosition <= 1) then
-			self.countdownRunning = false
+			ShiningLootCouncil.countdownRunning = false
 		end
 	end
-	if self.updateFrequency < (GetTime() - self.lastUpdate) then
-		self.lastUpdate = GetTime()
+	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.updateFrequency < (GetTime() - ShiningLootCouncil.lastUpdate) then
+		ShiningLootCouncil.lastUpdate = GetTime()
 		SLCTable:GetAllPlayersIlvl()
 		--[[local specIdx, specName, specIcon = SLCRolls:GetTalentSpecInfo() -- talent info, currently only getting the player. Figure out how to get entire raid
 		if specIcon then SLCTable.playerSpecs[UnitName("player")] = specIcon end]]
 	end
 
-	if self.inspectFrequency < GetTime() - self.lastInspect and self.queryingPlayer == false then
-		self.inspectIndex = self.inspectIndex + 1
-		if UnitName("raid"..self.inspectIndex) then
-			self.inspectTargetName = UnitName("raid"..self.inspectIndex)
-			self:PlayerTalentSpec("raid"..self.inspectIndex)
+	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.inspectFrequency < GetTime() - ShiningLootCouncil.lastInspect and ShiningLootCouncil.queryingPlayer == false then
+		ShiningLootCouncil.inspectIndex = ShiningLootCouncil.inspectIndex + 1
+		if UnitName("raid"..ShiningLootCouncil.inspectIndex) then
+			ShiningLootCouncil.inspectTargetName = UnitName("raid"..ShiningLootCouncil.inspectIndex)
+			ShiningLootCouncil:PlayerTalentSpec("raid"..ShiningLootCouncil.inspectIndex)
 		else
-			self.lastInspect = GetTime()
-			self.inspectIndex = 0
+			ShiningLootCouncil.lastInspect = GetTime()
+			ShiningLootCouncil.inspectIndex = 0
 		end
 	end
 end
@@ -1044,14 +1084,14 @@ function ShiningLootCouncil:PlayerIsMasterLooter()
 	if (lootMethod ~= "master") then
 		return false
 	end
-	
-	if (masterLooterPartyID ~= 0) then
-		return false
-	end
 
 	-- temporary so I can test its performancce
 	if UnitName("player") == "Hildigunnur" then
 		return true
+	end
+	
+	if (masterLooterPartyID ~= 0) then
+		return false
 	end
 	return true
 end

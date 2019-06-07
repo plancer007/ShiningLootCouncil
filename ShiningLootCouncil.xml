@@ -529,9 +529,9 @@
 				self:StartMoving()
             </OnClick>
             -->
-			<OnUpdate>
+			<!--<OnUpdate>
 				ShiningLootCouncil:OnUpdate()
-			</OnUpdate>
+			</OnUpdate>-->
 		</Scripts>
 	</Frame>
 </Ui>
