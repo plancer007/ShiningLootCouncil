@@ -1019,6 +1019,8 @@ function ShiningLootCouncil:CollectInfo()
 	end
 
 	if not inRaid then return false end
+
+	return true
 end
 
 function ShiningLootCouncil:OnUpdate()
