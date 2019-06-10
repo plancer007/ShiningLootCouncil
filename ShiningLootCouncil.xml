@@ -97,7 +97,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerName">
-							<Offset x="90" y="12" />
+							<Offset x="90" y="0" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -106,7 +106,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItem">
-							<Offset x="180" y="12" />
+							<Offset x="180" y="0" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -115,7 +115,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerGuildRank">
-							<Offset x="85" y="12" />
+							<Offset x="85" y="0" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -124,7 +124,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerRole">
-							<Offset x="75" y="12" />
+							<Offset x="75" y="0" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -133,7 +133,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItemlevel">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="0" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -151,7 +151,7 @@
 					justifyH="RIGHT" text="">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerVotes">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="0" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />

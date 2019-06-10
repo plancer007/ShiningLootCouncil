@@ -1010,15 +1010,21 @@ function ShiningLootCouncil:CountdownClicked(buttonFrame)
 end
 
 function ShiningLootCouncil:CollectInfo()
-	if self.inCombat then return false end
+	if self.inCombat then
+		return false
+	end
+
+	local zone = GetRealZoneText()
 
 	local inRaid = false
 	for i = 1, #self.raids do
-		if self.raids[i] == GetRealZoneText() then inRaid = true end
-		break
+		if self.raids[i] == zone then inRaid = true break end
 	end
 
-	if not inRaid then return false end
+	if not inRaid then
+		--self:Print("not collecting info")
+		return false
+	end
 
 	return true
 end
@@ -1043,8 +1049,7 @@ function ShiningLootCouncil:OnUpdate()
 	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.updateFrequency < (GetTime() - ShiningLootCouncil.lastUpdate) then
 		ShiningLootCouncil.lastUpdate = GetTime()
 		SLCTable:GetAllPlayersIlvl()
-		--[[local specIdx, specName, specIcon = SLCRolls:GetTalentSpecInfo() -- talent info, currently only getting the player. Figure out how to get entire raid
-		if specIcon then SLCTable.playerSpecs[UnitName("player")] = specIcon end]]
+		--ShiningLootCouncil:Print("Getting ilvl")
 	end
 
 	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.inspectFrequency < GetTime() - ShiningLootCouncil.lastInspect and ShiningLootCouncil.queryingPlayer == false then
@@ -1052,6 +1057,7 @@ function ShiningLootCouncil:OnUpdate()
 		if UnitName("raid"..ShiningLootCouncil.inspectIndex) then
 			ShiningLootCouncil.inspectTargetName = UnitName("raid"..ShiningLootCouncil.inspectIndex)
 			ShiningLootCouncil:PlayerTalentSpec("raid"..ShiningLootCouncil.inspectIndex)
+			--ShiningLootCouncil:Print("getting talents")
 		else
 			ShiningLootCouncil.lastInspect = GetTime()
 			ShiningLootCouncil.inspectIndex = 0
