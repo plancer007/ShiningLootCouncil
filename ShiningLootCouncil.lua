@@ -53,7 +53,9 @@ ShiningLootCouncil = {
    		["Restoration"]			= "Healer",
    		["Holy"]				= "Healer",
    		["Discipline"]			= "Healer",
-   		["Feral Combat"]		= "Tank/Damage"
+   		["Feral Combat"]		= "Tank/Damage",
+   		["Arms"]				= "Damage",
+   		["Fury"]				= "Damage"
 	},
 	specIcons = {},
 	raids = {
@@ -66,6 +68,53 @@ ShiningLootCouncil = {
 		"Hyjal Summit",
 		"Zul'Aman",
 		"Sunwell Plateau",
+	},
+	classSpecs = {
+		["Druid"] = {
+			"Balance",
+			"Feral Combat",
+			"Restoration"
+		},
+		["Hunter"] = {
+			"Beast Mastery",
+			"Marksmanship",
+			"Survival"
+		},
+		["Mage"] = {
+			"Arcane",
+			"Fire",
+			"Frost"
+		},
+		["Rogue"] = {
+			"Combat",
+			"Assassination",
+			"Subtlety"
+		},
+		["Shaman"] = {
+			"Elemental",
+			"Enhancement",
+			"Restoration"
+		},
+		["Warlock"] = {
+			"Affliction",
+			"Demonology",
+			"Destruction"
+		},
+		["Priest"] = {
+			"Discipline",
+			"Holy",
+			"Shadow"
+		},
+		["Warrior"] = {
+			"Protection",
+			"Arms",
+			"Fury"
+		},
+		["Paladin"] = {
+			"Retribution",
+			"Protection",
+			"Holy"
+		}
 	}
 }
                      
@@ -137,6 +186,7 @@ end
 
 function ShiningLootCouncil:PlayerTalentSpec(unit)
 	local name = UnitName(unit)
+	local c = UnitClass(unit)
 	if name == UnitName("player") then
 		local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
 
@@ -154,18 +204,27 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 		if totalPoints < 61 then return end
 
 		--if specName then self.raidSpecs[name] = specName end
-		if specName then
-			if not self.raidSpecs[name] then
-				self.raidSpecs[name] = {}
+		if specName and specIcon then
+			local valid = false
+			for class,spec in pairs(classSpecs) do
+				if class == c and spec == specName then
+					valid = true
+					break
+				end
 			end
-			table.insert(self.raidSpecs[name], specName)
-		end
-		if specIcon then
-			if not self.specIcons[specName] then
-				self.specIcons[specName] = {}
+
+			if valid then
+				if not self.raidSpecs[name] then
+					self.raidSpecs[name] = {}
+				end
+				table.insert(self.raidSpecs[name], specName)
+
+				if not self.specIcons[specName] then
+					self.specIcons[specName] = {}
+				end
+				--self.specIcons[specName] = specIcon
+				table.insert(self.specIcons[specName], specIcon)
 			end
-			--self.specIcons[specName] = specIcon
-			table.insert(self.specIcons[specName], specIcon)
 		end
 	else
 		local canInspect = CheckInteractDistance(unit, 1); -- check if we're close enough to inspect them.
