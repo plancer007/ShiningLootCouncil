@@ -88,7 +88,7 @@
 					justifyH="LEFT" text="Not Found" relativeTo="$parent_Texture">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT">
-							<Offset x="18" y="17" />
+							<Offset x="18" y="16" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
