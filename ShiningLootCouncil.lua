@@ -406,6 +406,8 @@ function ShiningLootCouncil:AwardLootClicked(buttonFrame)
 					if (itemLink == SLCTable:GetItemLink(self.currentItemIndex)) then
 						GiveMasterLoot(itemIndex, winningPlayerIndex)
 						self:Speak("Congratulations to " .. SLCRolls.winningPlayer .. " on winning " .. itemLink)
+						SLCRolls.winningPlayer = nil
+						SLCRolls:ClearRolls()
 						return
 					end
 				end
