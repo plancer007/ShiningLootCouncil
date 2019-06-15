@@ -68,6 +68,7 @@ ShiningLootCouncil = {
 		"Hyjal Summit",
 		"Zul'Aman",
 		"Sunwell Plateau",
+		"Shattrath City"
 	},
 	classSpecs = {
 		["Druid"] = {
@@ -173,7 +174,7 @@ function ShiningLootCouncil:Trim(str)
 end
 
 function ShiningLootCouncil:DebugPrint(str)
-	if (ShiningLootCouncil.debugging) then
+	if (self.debugging) then
 		DEFAULT_CHAT_FRAME:AddMessage("|cFF15FF15" .. str .. "|r")
 	end
 end
@@ -206,10 +207,12 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 		--if specName then self.raidSpecs[name] = specName end
 		if specName and specIcon then
 			local valid = false
-			for class,spec in pairs(classSpecs) do
-				if class == c and spec == specName then
-					valid = true
-					break
+			for class,specs in pairs(self.classSpecs) do
+				for i = 1, #specs do
+					if class == c and specs[i] == specName then
+						valid = true
+						break
+					end
 				end
 			end
 
@@ -451,6 +454,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
         self:UpdateDropdowns()
     elseif event == "INSPECT_TALENT_READY" then
     	local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
+    	local c = self.inspectTargetClass
 
 		for i = 1, MAX_TALENT_TABS do
 			local name, icon, pointsSpent = GetTalentTabInfo(i, true)
@@ -467,20 +471,38 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 
 		ClearInspectPlayer()
 
-		if self.raidSpecs and self.inspectTargetName and specName then
+		if self.raidSpecs and self.inspectTargetName and specName and specIcon then
 			if not self.raidSpecs[self.inspectTargetName] then
 				self.raidSpecs[self.inspectTargetName] = {}
 			end
 			--self.raidSpecs[self.inspectTargetName] = specName
-			table.insert(self.raidSpecs[self.inspectTargetName], specName)
-		end
-		if specIcon then
-			if not self.specIcons[specName] then
-				self.specIcons[specName] = {}
+			--table.insert(self.raidSpecs[self.inspectTargetName], specName)
+			if specName and specIcon then
+				local valid = false
+				for class,specs in pairs(self.classSpecs) do
+					for i = 1, #specs do
+						if class == c and specs[i] == specName then
+							valid = true
+							break
+						end
+					end
+				end
+
+				if valid then
+					if not self.raidSpecs[self.inspectTargetName] then
+						self.raidSpecs[self.inspectTargetName] = {}
+					end
+					table.insert(self.raidSpecs[self.inspectTargetName], specName)
+
+					if not self.specIcons[specName] then
+						self.specIcons[specName] = {}
+					end
+					--self.specIcons[specName] = specIcon
+					table.insert(self.specIcons[specName], specIcon)
+				end
 			end
-			--self.specIcons[specName] = specIcon
-			table.insert(self.specIcons[specName], specIcon)
 		end
+
 		self.queryingPlayer = false
 		self.inspectTargetName = nil
     elseif event == "PLAYER_REGEN_DISABLED" then
@@ -530,18 +552,20 @@ function ShiningLootCouncil:HandlePossibleRoll(message,sender)
 			if sender ~= nil and itemLink ~= nil and itemRarity > 1 then
 				self:DebugPrint(sender .. " linked " .. itemLink)
 				guildName, guildRankName, guildRankIndex = GetGuildInfo(sender) -- change this somehow to the player who linked item instead of us
+				--self:Print("Name: " .. sender .. ". guildrank: " .. guildRankName .. ". Role: " .. SLCRolls:GetPlayerRole(sender) .. ". ilvl: " .. SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] .. ". Note: " .. msg)
+				--self:Print("Item: " .. itemName .. ". Rarity: " .. itemRarity .. ". Ilvl: " .. itemLevel)
 				player = {
-					name = sender,
+					name = sender or "not found",
 					guildRank = guildRankName or "not found",
-					role = SLCRolls:GetPlayerRole(sender), 
+					role = SLCRolls:GetPlayerRole(sender) or "not found", 
 					votes = 0,
 					--ilvl = SLCTable.itemlevels[sender] or 0,
 					ilvl = SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] or 0,
 					note = msg or ""
 				}
 				item = {
-					name = itemName,
-					rarity = itemRarity,
+					name = itemName or "not found",
+					rarity = itemRarity or 1,
 					ilvl = itemLevel or 0,
 
 				}
@@ -554,7 +578,7 @@ end
 function SLCRolls:AddPlayer(player, item)
 	ShiningLootCouncil:DebugPrint("Adding item for " .. player.name)
 	for itemIndex = 1, self.itemCount do
-		if (self.items[itemIndex].playerName == player.name) and ShiningLootCouncil.debugging ~= true then
+		if (self.items[itemIndex].playerName == player.name) then
 			ShiningLootCouncil:DebugPrint("Ignoring the item linked.")
 			return
 		end
@@ -562,7 +586,7 @@ function SLCRolls:AddPlayer(player, item)
 	self.itemCount 								= self.itemCount + 1
 	self.items[self.itemCount] 					= {}
 	self.items[self.itemCount].playerName 		= player.name
-	self.items[self.itemCount].playerGuildRank 	= player.guildRank or "Not Found"
+	self.items[self.itemCount].playerGuildRank 	= player.guildRank
 	self.items[self.itemCount].playerRole 		= player.role
 	self.items[self.itemCount].votes 			= player.votes
 	self.items[self.itemCount].playerIlvl 		= player.ilvl
@@ -1007,8 +1031,8 @@ end
 function SLCTable:AddItem(itemLink)
 	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture = GetItemInfo(itemLink)
 	local lootThreshold = GetLootThreshold()
-	if (itemRarity < lootThreshold) and ShiningLootCouncil.debugging ~= true then
-		return
+	if (itemRarity < lootThreshold) then
+		--return
 	end
 	self.lootCount = self.lootCount + 1
 	self.loot[self.lootCount] 				= {}
@@ -1115,6 +1139,7 @@ function ShiningLootCouncil:OnUpdate()
 		ShiningLootCouncil.inspectIndex = ShiningLootCouncil.inspectIndex + 1
 		if UnitName("raid"..ShiningLootCouncil.inspectIndex) then
 			ShiningLootCouncil.inspectTargetName = UnitName("raid"..ShiningLootCouncil.inspectIndex)
+			ShiningLootCouncil.inspectTargetClass = UnitClass("raid"..ShiningLootCouncil.inspectIndex)
 			ShiningLootCouncil:PlayerTalentSpec("raid"..ShiningLootCouncil.inspectIndex)
 			--ShiningLootCouncil:Print("getting talents")
 		else
