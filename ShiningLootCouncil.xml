@@ -97,7 +97,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerName">
-							<Offset x="90" y="12" />
+							<Offset x="90" y="10" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -106,7 +106,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItem">
-							<Offset x="180" y="12" />
+							<Offset x="180" y="10" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -115,7 +115,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerGuildRank">
-							<Offset x="85" y="12" />
+							<Offset x="85" y="10" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -124,7 +124,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerRole">
-							<Offset x="75" y="12" />
+							<Offset x="75" y="10" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -133,7 +133,7 @@
 					justifyH="RIGHT" text="Not Found">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItemlevel">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="10" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -151,7 +151,7 @@
 					justifyH="RIGHT" text="">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerVotes">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="10" />
 						</Anchor>
 					</Anchors>
 					<Color r="1" g="1" b="1" a="1" />
@@ -451,7 +451,7 @@
 				<FontString name="$parent_ItemDrop" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Item">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerLabel">
-							<Offset x="90" y="12" />
+							<Offset x="90" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="150" /></Size>-->
@@ -460,7 +460,7 @@
 				<FontString name="$parent_GuildRankLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Rank">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_ItemDrop">
-							<Offset x="180" y="12" />
+							<Offset x="180" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="50" /></Size>-->
@@ -469,7 +469,7 @@
 				<FontString name="$parent_RaidRoleLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Role">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_GuildRankLabel">
-							<Offset x="85" y="12" />
+							<Offset x="85" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="50" /></Size>-->
@@ -478,7 +478,7 @@
 				<FontString name="$parent_PlayerItemlevelLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Ilvl">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_RaidRoleLabel">
-							<Offset x="75" y="12" />
+							<Offset x="75" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="50" /></Size>-->
@@ -487,7 +487,7 @@
 				<FontString name="$parent_ItemlevelDifferenceLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Diff">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_PlayerItemlevelLabel">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="50" /></Size>-->
@@ -496,7 +496,7 @@
 				<FontString name="$parent_VotesLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Votes">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_ItemlevelDifferenceLabel">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="50" /></Size>-->
@@ -505,7 +505,7 @@
 				<FontString name="$parent_NoteLabel" inherits="GameFontNormalSmall" justifyH="RIGHT" text="Note">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_VotesLabel">
-							<Offset x="50" y="12" />
+							<Offset x="50" y="10" />
 						</Anchor>
 					</Anchors>
 					<!--<Size><Absdimension x="50" /></Size>-->
