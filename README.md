@@ -6,7 +6,7 @@ Originally called MasterLootManager I decided to give the addon sort of an overh
 
 Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
 
-The GearScore addon for tbc interferes with this addon's ability to scan for player's specs and item lvl so I recommend not using GearScore at the same time if you want correct player specs and item levels.
+The addon GearScore and other addons that inspect targets that you hover over (that's how GearScore gets the player's gearscore) interferes with this addon's ability to scan for player's specs and item lvl so I recommend not using those types of addons at the same time if you want correct player specs and item levels.
 
 # TODO
 
