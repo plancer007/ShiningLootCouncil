@@ -10,7 +10,7 @@ notifiedNewVersionDate = nil
 ShiningLootCouncil = {
 	frame = nil,
 	constFrame = nil,
-	debugging = nil, 
+	debugging = true, 
 	countdownRange = 10, 
 	countdownRunning = false,
     disenchant = nil,
@@ -343,6 +343,7 @@ function ShiningLootCouncil:OnLoad(frame)
     self.frame:RegisterEvent("INSPECT_TALENT_READY")
     self.frame:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self.frame:RegisterEvent("CHAT_MSG_ADDON")
 	 
 	self.frame:SetScript("OnEvent", 
 			function(frame, event, ...)
@@ -513,6 +514,16 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     	end
     elseif event == "PLAYER_REGEN_ENABLED" then
     	self.inCombat = false
+    elseif event == "CHAT_MSG_ADDON" and arg1 and arg1 == "SLC" and arg2 and arg4 ~= UnitName("player") then
+    	self:DebugPrint("Addon msg recieved, msg is '" .. arg2 .. "'")
+    	arg2 = self:Split(arg2,":")
+    	if arg2[1] == "voteplayer" then
+    		self.items[arg2[2]].votes = self.items[arg2[2]].votes + 1
+    	elseif arg2[1] == "retractvote" then
+    		self.items[arg2[2]].votes = self.items[arg2[2]].votes - 1
+    	elseif arg2[1] == "clearrolls" then
+    		SLCRolls:ClearRolls()
+    	end
     end
 end
 
@@ -556,13 +567,19 @@ function ShiningLootCouncil:HandlePossibleRoll(message,sender)
 				guildName, guildRankName, guildRankIndex = GetGuildInfo(sender) -- change this somehow to the player who linked item instead of us
 				--self:Print("Name: " .. sender .. ". guildrank: " .. guildRankName .. ". Role: " .. SLCRolls:GetPlayerRole(sender) .. ". ilvl: " .. SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] .. ". Note: " .. msg)
 				--self:Print("Item: " .. itemName .. ". Rarity: " .. itemRarity .. ". Ilvl: " .. itemLevel)
+				local tmp
+				if SLCTable.itemlevels[sender] == nil then
+					tmp = 0
+				else
+					tmp = SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)]
+				end 
 				player = {
 					name = sender or "not found",
 					guildRank = guildRankName or "not found",
 					role = SLCRolls:GetPlayerRole(sender) or "not found", 
 					votes = 0,
 					--ilvl = SLCTable.itemlevels[sender] or 0,
-					ilvl = SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] or 0,
+					ilvl = tmp,
 					note = msg or ""
 				}
 				item = {
@@ -692,6 +709,7 @@ end
 
 function SLCTable:GetPlayerIlvl(index)
 	local name = SLCRolls:GetPlayerName(index)
+	if self.itemlevels[name] == nil then return 0 end
 	return self.itemlevels[name][math.ceil(#self.itemlevels[name]/2)]
 end
 
@@ -708,7 +726,8 @@ function SLCRolls:GetPlayerGuildRank(index)
 end
 
 function SLCRolls:GetPlayerRole(name)
-	return ShiningLootCouncil.raidRoles[ShiningLootCouncil.raidSpecs[name][math.ceil(#ShiningLootCouncil.raidSpecs[name]/2)]] or "not found"
+	if ShiningLootCouncil.raidRoles[name] == nil then return "not found" end
+	return ShiningLootCouncil.raidRoles[ShiningLootCouncil.raidSpecs[name][math.ceil(#ShiningLootCouncil.raidSpecs[name]/2)]]
 end
 
 function SLCRolls:GetItemIlvl(index)
@@ -760,6 +779,7 @@ function SLCRolls:VotePlayer(index)
 		local votedDiff = self.itemCount - votedIndex
 		local votedI = self.itemCount - votedDiff
 		self.items[votedI].votes = self.items[votedI].votes - 1
+		SendAddonMessage("SLC", "retractvote:" .. UnitName("player") .. ":" .. votedI, "RAID")
 		j = votedI
 
 		if self.playerVotedFor == playerName then
@@ -774,6 +794,7 @@ function SLCRolls:VotePlayer(index)
 	if j ~= i or j == nil then
 		self.items[i].votes = self.items[i].votes + 1
 		self.playerVotedFor = playerName
+		SendAddonMessage("SLC", "voteplayer:" .. i, "RAID")
 	end
 end
 
@@ -817,6 +838,7 @@ function SLCRolls:UpdateRollList()
 		else
 			texture:Show()
 			-- the table with all the icon paths for that spec
+			if ShiningLootCouncil.raidSpecs[playerName] == nil or ShiningLootCouncil.specIcons[ShiningLootCouncil.raidSpecs[playerName]] == nil then break end
 			local specIconsTable = ShiningLootCouncil.specIcons[ShiningLootCouncil.raidSpecs[playerName][math.ceil(#ShiningLootCouncil.raidSpecs[playerName]/2)]]
 			texture:SetTexture(specIconsTable[math.ceil(#specIconsTable/2)],true)
 			texture:SetSize(16,16)
@@ -1058,6 +1080,7 @@ function ShiningLootCouncil:AnnounceMainSpecClicked(buttonFrame)
 	local itemLink = SLCTable:GetItemLink(self.currentItemIndex)
 	if not itemLink then return end
 	SLCRolls:ClearRolls()
+	SendAddonMessage("SLC", "clearrolls", "RAID")
 	self:Speak("Link your current item if you need " .. itemLink .. ", MAIN SPEC")
 end
 
