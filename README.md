@@ -8,7 +8,7 @@ Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
 
 # TODO
 
--Figure out a way to know for sure that you're getting the player's correct spec. Atm it's sometimes getting Protection for warriors instead of fury because it switches your inspection target when you hover over another player <.<
+-Figure out a way to know for sure that you're getting the player's correct spec. Atm it's sometimes getting Protection for warriors instead of fury because it switches your inspection target when you hover over another player <.<. Maybe detect that the player is hovering over another player in which case we delete any info we're getting and continue onto the next player.
 
 -Instead of returning '0' or 'not found' when values about players arent found, query other players for the information and then use that info
 
