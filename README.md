@@ -6,7 +6,7 @@ Originally called MasterLootManager I decided to give the addon sort of an overh
 
 Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
 
-#TODO
+# TODO
 
 -Figure out a way to know for sure that you're getting the player's correct spec. Atm it's sometimes getting Protection for warriors instead of fury because it switches your inspection target when you hover over another player <.<
 
