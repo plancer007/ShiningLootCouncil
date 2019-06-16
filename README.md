@@ -5,6 +5,7 @@ Original addon made by Zernin (wotlk) and backported to TBC by CrapSoda.
 Originally called MasterLootManager I decided to give the addon sort of an overhaul to make it a loot council addon and make it as similar as I can to retail's RCLootCouncil addon
 
 Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
+Link to RCLootCouncil: https://www.curseforge.com/wow/addons/rclootcouncil
 
 The addon GearScore and other addons that inspect targets that you hover over (that's how GearScore gets the player's gearscore) interferes with this addon's ability to scan for player's specs and item lvl so I recommend not using those types of addons at the same time if you want correct player specs and item levels.
 
