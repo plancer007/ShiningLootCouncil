@@ -4,14 +4,11 @@
 	Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
 ]]
 
-VERSION = 1.0
-highestV = VERSION
+VERSION = "1.0"
+highestV = tonumber(VERSION)
 lastVersionQuery = 0 -- GetTime()
 versionQuerying = false
 todaysDate = date("%m%d")
-
-notifiedNewVersion = false
-notifiedNewVersionDate = nil
 
 ShiningLootCouncil = {
 	frame = nil,
@@ -450,6 +447,10 @@ SlashCmdList["SLC"] = function(msg, editBox)
     		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
     	ShiningLootCouncil:DebugPrint("Length of ilvls: " .. longest)
+    elseif command == "versioncheck" then
+    	SendAddonMessage("SLC", "versioncheck", "RAID")
+    	ShiningLootCouncil:Print("Shining Loot Council Version Check: All raid members")
+    	ShiningLootCouncil:Print("--------------------------------")
     else
         ShiningLootCouncil:Print("Acceptable subcommands to /slc:".."\nshow - shows the roll window".."\nhide - hides the roll window")
     end
@@ -515,7 +516,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
         self:UpdateDropdowns()
         SLCTable:GetUnitIlvl("player")
         --version query
-        SendAddonMessage("SLC", "version:" .. VERSION, "RAID")
+        SendAddonMessage("SLC", "version:" .. tonumber(VERSION), "RAID")
     elseif event == "INSPECT_TALENT_READY" then
     	local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
     	local c = self.inspectTargetClass
@@ -599,9 +600,15 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     		versionQuerying = true
     		lastVersionQuery = GetTime()
     		local v = tonumber(arg2[2])
-    		if v > VERSION then
+    		if v > tonumber(VERSION) then
     			highestV = v
     		end
+    	-- when someone is asking you for your versoin
+    	elseif command == "versioncheck" then
+    		SendAddonMessage("SLC", "myversion:" .. VERSION, "WHISPER", arg4)
+    	-- when you've asked the raid for their version and they're sending it.
+    	elseif command == "myversion" then
+    		self:Print("SLC: " .. arg4 .. ": " .. arg2[2])
     	elseif command == "slctableadditem" then
     		SLCTable.lootCount = SLCTable.lootCount + 1
     		SLCTable.loot[SLCTable.lootCount] = {}
@@ -1279,13 +1286,13 @@ function ShiningLootCouncil:OnUpdate()
 	end
 
 	-- version querying
-	if GetTime() - 1 >= lastVersionQuery and versionQuerying and (notifiedNewVersion ~= true or (todaysDate ~= notifiedNewVersionDate)) then
+	if GetTime() - 1 >= lastVersionQuery and versionQuerying and (todaysDate ~= notifiedNewVersionDate or notifiedNewVersionDate == nil)) then
 		versionQuerying = false
-		if VERSION < highestV then
+		if tonumber(VERSION) < highestV then
 			ShiningLootCouncil:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")
 		end
 		notifiedNewVersion = true
-		notifiedNewVersionDate = date("%m%d")
+		notifiedNewVersionDate = todaysDate
 	end
 end
 
