@@ -5,6 +5,9 @@ Original addon made by Zernin (wotlk) and backported to TBC by CrapSoda.
 Originally called MasterLootManager I decided to give the addon sort of an overhaul to make it a loot council addon and make it as similar as I can to retail's RCLootCouncil addon
 
 Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
+Link to RCLootCouncil: https://www.curseforge.com/wow/addons/rclootcouncil
+
+The addon GearScore and other addons that inspect targets that you hover over (that's how GearScore gets the player's gearscore) interferes with this addon's ability to scan for player's specs and item lvl so I recommend not using those types of addons at the same time if you want correct player specs and item levels.
 
 # TODO
 
@@ -15,3 +18,7 @@ Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
 -Figure out a good way to send info between players so that all data/tables are up to date and using correct values.
 
 -When a player logs in, have them query for information from others about talents/ilvl and items if you're in the middle of looting a boss
+
+-When a tier item is linked link its real item lvl value instead of the token's ilvl, and also link which classes can use the token when announcing to roll for the item.
+
+-Figure out a way to allow players to use gearscore addons and whatnot and still have the addon work. Maybe hooksecurefunc?
