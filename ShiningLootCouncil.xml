@@ -174,7 +174,6 @@
 	<Frame name="ShiningLootCouncilMain" parent="UIParent" hidden="true"
 		enableMouse="true" movable="true">
 		<Size>
-			<!--<AbsDimension x="309" y="305" />-->
 			<AbsDimension x="1000" y="450" />
 		</Size>
 		<Anchors>
@@ -394,8 +393,8 @@
 			<Button name="$parent_ClearRollList" inherits="UIPanelButtonTemplate" text="Clear Rolls">
 				<Size><AbsDimension x="95" y="20" /></Size>
                 <Anchors>
-					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Settings">
-						<Offset x="0" y="-20" />
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parent_Settings">
+						<Offset x="5" y="0" />
 					</Anchor>
                 </Anchors>
 				<Scripts>

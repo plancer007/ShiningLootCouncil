@@ -1,6 +1,6 @@
 ## Interface: 20400
 ## Title: Shining Loot Council
-## Author: Hildigunnur (original addon (MasterLootManager) by Zernin (back ported and modified by CrapSoda))
+## Author: Hildigunnur (original addon (MasterLootManager) by Zernin(wotlk) and back ported and modified by CrapSoda)
 ## Version: 1.0
 ## Notes: Similar to retail's RCLootCouncil, used for distributing loot in Loot Council raids
 ## DefaultState: Enabled

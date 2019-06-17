@@ -4,6 +4,12 @@
 	Link to original addon: https://legacy-wow.com/tbc-addons/master-loot-manager/
 ]]
 
+VERSION = 1.0
+highestV = VERSION
+lastVersionQuery = 0 -- GetTime()
+versionQuerying = false
+todaysDate = date("%m%d")
+
 notifiedNewVersion = false
 notifiedNewVersionDate = nil
 
@@ -57,7 +63,53 @@ ShiningLootCouncil = {
    		["Arms"]				= "Damage",
    		["Fury"]				= "Damage"
 	},
-	specIcons = {},
+	specIcons = {
+		["Druid"] = {
+			["Balance"]		= {},
+			["Feral Combat"]= {},
+			["Restoration"]	= {}
+		},
+		["Hunter"] = {
+			["Beast Mastery"] 	= {},
+			["Marksmanship"]	= {},
+			["Survival"] 		= {}
+		},
+		["Mage"] = {
+			["Arcane"] 			= {},
+			["Fire"] 			= {},
+			["Frost"] 			= {}
+		},
+		["Rogue"] = {
+			["Combat"] 			= {},
+			["Assassination"] 	= {},
+			["Subtlety"] 		= {}
+		},
+		["Shaman"] = {
+			["Elemental"] 		= {},
+			["Enhancement"] 	= {},
+			["Restoration"] 	= {}
+		},
+		["Warlock"] = {
+			["Affliction"] 		= {},
+			["Demonology"] 		= {},
+			["Destruction"] 	= {}
+		},
+		["Priest"] = {
+			["Discipline"] 		= {},
+			["Holy"] 			= {},
+			["Shadow"] 			= {}
+		},
+		["Warrior"] = {
+			["Protection"] 		= {},
+			["Arms"] 			= {},
+			["Fury"] 			= {}
+		},
+		["Paladin"] = {
+			["Retribution"] 	= {},
+			["Protection"] 		= {},
+			["Holy"] 			= {}
+		}
+	},
 	raids = {
 		"Karazhan",
 		"Gruul's Lair",
@@ -67,8 +119,7 @@ ShiningLootCouncil = {
 		"Black Temple",
 		"Hyjal Summit",
 		"Zul'Aman",
-		"Sunwell Plateau",
-		"Shattrath City"
+		"Sunwell Plateau"
 	},
 	classSpecs = {
 		["Druid"] = {
@@ -150,7 +201,7 @@ SlotName = {
 -- loot 		info about the loot from the mob
 -- itemlevels 	keeps the itemlevels of players in the raid saved in a table
 -- itemlevel 	the itemlevel of the current item that's being rolled for.
-SLCTable = {lootCount = 0, loot = {}, itemlevels = {}, itemlevel = 0, playerSpecs = {}}
+SLCTable = {lootCount = 0, loot = {}, itemlevels = {}, itemlevel = 0, currItemName, playerSpecs = {}}
 
 SLCRolls = {itemCount = 0, items = {}, playerVotedFor = nil}
 
@@ -222,11 +273,11 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 				end
 				table.insert(self.raidSpecs[name], specName)
 
-				if not self.specIcons[specName] then
-					self.specIcons[specName] = {}
-				end
+				--[[if not self.specIcons[c][specName] then
+					self.specIcons[c][specName] = {}
+				end]]
 				--self.specIcons[specName] = specIcon
-				table.insert(self.specIcons[specName], specIcon)
+				table.insert(self.specIcons[c][specName], specIcon)
 			end
 		end
 	else
@@ -343,6 +394,7 @@ function ShiningLootCouncil:OnLoad(frame)
     self.frame:RegisterEvent("INSPECT_TALENT_READY")
     self.frame:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self.frame:RegisterEvent("CHAT_MSG_ADDON")
 	 
 	self.frame:SetScript("OnEvent", 
 			function(frame, event, ...)
@@ -385,13 +437,19 @@ SlashCmdList["SLC"] = function(msg, editBox)
     elseif (command == "hide") then
         ShiningLootCouncil.frame:Hide()
     elseif command == "talents" then
+    	local longest = 0
     	for k,v in pairs(ShiningLootCouncil.raidSpecs) do
+    		if #v > longest then longest = #v end
     		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
+    	ShiningLootCouncil:DebugPrint("Length of talents: " .. longest)
     elseif command == "ilvl" then
+    	local longest = 0
     	for k,v in pairs(SLCTable.itemlevels) do
+    		if #v > longest then longest = #v end
     		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
+    	ShiningLootCouncil:DebugPrint("Length of ilvls: " .. longest)
     else
         ShiningLootCouncil:Print("Acceptable subcommands to /slc:".."\nshow - shows the roll window".."\nhide - hides the roll window")
     end
@@ -408,6 +466,7 @@ function ShiningLootCouncil:AwardLootClicked(buttonFrame)
 						self:Speak("Congratulations to " .. SLCRolls.winningPlayer .. " on winning " .. itemLink)
 						SLCRolls.winningPlayer = nil
 						SLCRolls:ClearRolls()
+						SendAddonMessage("SLC", "clearrolls", "RAID")
 						return
 					end
 				end
@@ -454,6 +513,9 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     elseif (event == "RAID_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD") then
     	self.inspectIndex = 0
         self:UpdateDropdowns()
+        SLCTable:GetUnitIlvl("player")
+        --version query
+        SendAddonMessage("SLC", "version:" .. VERSION, "RAID")
     elseif event == "INSPECT_TALENT_READY" then
     	local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
     	local c = self.inspectTargetClass
@@ -496,11 +558,11 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 					end
 					table.insert(self.raidSpecs[self.inspectTargetName], specName)
 
-					if not self.specIcons[specName] then
+					--[[if not self.specIcons[specName] then
 						self.specIcons[specName] = {}
-					end
+					end]]
 					--self.specIcons[specName] = specIcon
-					table.insert(self.specIcons[specName], specIcon)
+					table.insert(self.specIcons[c][specName], specIcon)
 				end
 			end
 		end
@@ -513,6 +575,59 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     	end
     elseif event == "PLAYER_REGEN_ENABLED" then
     	self.inCombat = false
+    elseif event == "CHAT_MSG_ADDON" and arg1 and arg1 == "SLC" and arg2 and arg4 ~= UnitName("player") then
+    	self:DebugPrint("Addon msg recieved, msg is '" .. arg2 .. "'")
+    	arg2 = self:Split(arg2,":")
+    	local command = arg2[1]
+    	if command == "voteplayer" then
+    		for i = 1, #SLCRolls.items do
+    			if SLCRolls.items[i].playerName == arg2[2] then
+    				SLCRolls.items[i].votes = SLCRolls.items[i].votes + 1
+    				SLCRolls:UpdateRollList()
+    			end
+    		end
+    	elseif command == "retractvote" then
+    		for i = 1, #SLCRolls.items do
+    			if SLCRolls.items[i].playerName == arg2[2] then
+    				SLCRolls.items[i].votes = SLCRolls.items[i].votes - 1
+    				SLCRolls:UpdateRollList()
+    			end
+    		end
+    	elseif command == "clearrolls" then
+    		SLCRolls:ClearRolls()
+    	elseif command == "version" then
+    		versionQuerying = true
+    		lastVersionQuery = GetTime()
+    		local v = tonumber(arg2[2])
+    		if v > VERSION then
+    			highestV = v
+    		end
+    	elseif command == "slctableadditem" then
+    		SLCTable.lootCount = SLCTable.lootCount + 1
+    		SLCTable.loot[SLCTable.lootCount] = {}
+			SLCTable.loot[SLCTable.lootCount].itemLink 		= arg2[2]
+			SLCTable.loot[SLCTable.lootCount].itemName 		= arg2[3]
+			SLCTable.loot[SLCTable.lootCount].itemTexture 	= arg2[4]
+			SLCTable.loot[SLCTable.lootCount].ilvl 			= arg2[5]
+			ShiningLootCouncil.UpdateCurrentItem()
+    	elseif command == "slcrollsaddplayer" then
+    		SLCRolls.itemCount = SLCRolls.itemCount + 1
+    		SLCRolls.items[SLCRolls.itemCount].playerName 		= arg2[2]
+			SLCRolls.items[SLCRolls.itemCount].playerGuildRank 	= arg2[3]
+			SLCRolls.items[SLCRolls.itemCount].playerRole 		= arg2[4]
+			SLCRolls.items[SLCRolls.itemCount].votes 			= arg2[5]
+			SLCRolls.items[SLCRolls.itemCount].playerIlvl 		= arg2[6]
+			SLCRolls.items[SLCRolls.itemCount].note 			= arg2[7]
+			SLCRolls.items[SLCRolls.itemCount].itemName 		= arg2[8]
+			SLCRolls.items[SLCRolls.itemCount].itemRarity 		= arg2[9]
+			SLCRolls.items[SLCRolls.itemCount].itemIlvl 		= arg2[10]
+			ShiningLootCouncil.UpdateCurrentItem()
+    	--[[elseif command == "updatecurrentitem" then
+    		arg2[2]:SetText(arg2[3])
+			arg2[4]:SetTexture(arg2[5])
+			getglobal("ShiningLootCouncilMain_CurrentItemIlvl"):SetText("ilvl: " .. arg2[6])
+			SLCTable.currItemName = arg2[7]]
+    	end
     end
 end
 
@@ -551,6 +666,9 @@ function ShiningLootCouncil:HandlePossibleRoll(message,sender)
 			itemID = string.sub(tostring(item),6,endIndex)
 			itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID)
 
+			-- if the item the player linked is the same as the item that is being rolled for from the boss then ignore the roll. Players sometimes link an item that dropped out of excitement so we don't want that to count as a their roll.
+			if itemName == SLCTable.currItemName then return end
+
 			if sender ~= nil and itemLink ~= nil and itemRarity > 1 then
 				self:DebugPrint(sender .. " linked " .. itemLink)
 				guildName, guildRankName, guildRankIndex = GetGuildInfo(sender) -- change this somehow to the player who linked item instead of us
@@ -563,7 +681,8 @@ function ShiningLootCouncil:HandlePossibleRoll(message,sender)
 					votes = 0,
 					--ilvl = SLCTable.itemlevels[sender] or 0,
 					ilvl = SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] or 0,
-					note = msg or ""
+					note = msg or "",
+					class = UnitClass(sender)
 				}
 				item = {
 					name = itemName or "not found",
@@ -593,10 +712,16 @@ function SLCRolls:AddPlayer(player, item)
 	self.items[self.itemCount].votes 			= player.votes
 	self.items[self.itemCount].playerIlvl 		= player.ilvl
 	self.items[self.itemCount].note 			= player.note
+	self.items[self.itemCount].playerClass 		= player.class
 	self.items[self.itemCount].itemName 		= item.name
 	self.items[self.itemCount].itemRarity 		= item.rarity
 	self.items[self.itemCount].itemIlvl 		= item.ilvl
 	ShiningLootCouncil:DebugPrint("Added item for " .. player.name)
+
+	--[[SendAddonMessage("SLC", "slcrollsaddplayer:" .. self.items[self.itemCount].playerName .. ":" .. self.items[self.itemCount].playerGuildRank .. ":" .. self.items[self.itemCount].playerRole .. ":" .. self.items[self.itemCount].votes .. ":" .. 
+		self.items[self.itemCount].playerIlvl .. ":" .. self.items[self.itemCount].note .. ":" .. self.items[self.itemCount].itemName .. ":" .. self.items[self.itemCount].itemRarity .. ":" .. self.items[self.itemCount].itemIlvl, "OFFICER")]]
+	SendAddonMessage("SLC", "slcrollsaddplayer:" .. self.items[self.itemCount].playerName .. ":" .. self.items[self.itemCount].playerGuildRank .. ":" .. self.items[self.itemCount].playerRole .. ":" .. self.items[self.itemCount].votes .. ":" .. 
+		self.items[self.itemCount].playerIlvl .. ":" .. self.items[self.itemCount].note .. ":" .. self.items[self.itemCount].itemName .. ":" .. self.items[self.itemCount].itemRarity .. ":" .. self.items[self.itemCount].itemIlvl, "WHISPER", "Hildigunnur")
 
 	self:UpdateRollList()
 end
@@ -638,27 +763,7 @@ end
 -- Function taken from ElvUI tooltip.lua
 function SLCTable:GetAllPlayersIlvl()
 	for i = 1, 40 do
-		local player = UnitName("raid" .. i)
-		if player ~= nil --[[and UnitIsConnected("raid"..i) and CheckInteractDistance("raid"..i,1)]] then
-			local total, item = 0, 0
-			for j = 1, #SlotName do
-				local itemLink = GetInventoryItemLink("raid" .. i, GetInventorySlotInfo(("%sSlot"):format(SlotName[j])))
-				if itemLink then
-					local itemLevel = select(4, GetItemInfo(itemLink))
-					if itemLevel and itemLevel > 0 then
-						item = item + 1
-						total = total + itemLevel
-					end
-				end
-			end 
-			total = total/item
-			if total > 0 then
-				if not self.itemlevels[player] then
-					self.itemlevels[player] = {}
-				end
-				table.insert(self.itemlevels[player],tonumber(math.floor(total)))
-			end
-		end
+		self:GetPlayerIlvl("raid"..i)
 	end
 
 	if #SLCTable.itemlevels >= 25 then
@@ -666,28 +771,28 @@ function SLCTable:GetAllPlayersIlvl()
 	end
 end
 
--- Function taken from ElvUI core.lua
-function SLCRolls:GetTalentSpecInfo(isInspect)
-	local maxPoints, specIdx, specName, specIcon = 0, 0
+function SLCTable:GetUnitIlvl(unit)
+	local player = UnitName(unit)
+	if player == nil then return end
 
-	for i = 1, MAX_TALENT_TABS do
-		local name, icon, pointsSpent = GetTalentTabInfo(i, isInspect)
-		if maxPoints < pointsSpent then
-			maxPoints = pointsSpent
-			specIdx = i
-			specName = name
-			specIcon = icon
+	local total,item = 0,0
+	for i = 1, #SlotName do
+		local itemLink = GetInventoryItemLink(unit, GetInventorySlotInfo(("%sSlot"):format(SlotName[i])))
+		if itemLink then
+			local itemLevel = select(4, GetItemInfo(itemLink))
+			if itemLevel and itemLevel > 0 then
+				item = item + 1
+				total = total + itemLevel
+			end
 		end
+	end 
+	total = total/item
+	if total > 0 then
+		if not self.itemlevels[player] then
+			self.itemlevels[player] = {}
+		end
+		table.insert(self.itemlevels[player],tonumber(math.floor(total)))
 	end
-
-	if not specName then
-		specName = NONE
-	end
-	if not specIcon then
-		specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
-	end
-
-	return specIdx, specName, specIcon
 end
 
 function SLCTable:GetPlayerIlvl(index)
@@ -705,6 +810,10 @@ end
 
 function SLCRolls:GetPlayerGuildRank(index)
 	return self.items[index].playerGuildRank
+end
+
+function SLCRolls:GetPlayerClass(index)
+	return self.items[index].playerClass
 end
 
 function SLCRolls:GetPlayerRole(name)
@@ -752,7 +861,6 @@ function SLCRolls:VotePlayer(index)
 	local i = self.itemCount - diff 	-- ugliest hack I've ever seen but for some reason using the index parameter DOESN'T FUCKING WORK.
 	local playerName = self:GetPlayerName(i)
 	local j = nil -- this becomes the ID of the player whose vote you're retracting. If this is not equal to nil then don't add a vote for the player else you just retract their vote then give it back to them.
-	-- sendaddonmessage to other council members
 	-- if you've already voted for a player then remove your vote from their count
 	if self.playerVotedFor ~= nil then -- self.playerVotedFor == playerName
 		ShiningLootCouncil:DebugPrint("Voting for player already voted for. Retracting vote")
@@ -760,6 +868,8 @@ function SLCRolls:VotePlayer(index)
 		local votedDiff = self.itemCount - votedIndex
 		local votedI = self.itemCount - votedDiff
 		self.items[votedI].votes = self.items[votedI].votes - 1
+		--SendAddonMessage("SLC", "retractvote:" .. playerName, "OFFICER")
+		SendAddonMessage("SLC", "retractvote:" .. playerName, "WHISPER","Hildigunnur")
 		j = votedI
 
 		if self.playerVotedFor == playerName then
@@ -774,6 +884,8 @@ function SLCRolls:VotePlayer(index)
 	if j ~= i or j == nil then
 		self.items[i].votes = self.items[i].votes + 1
 		self.playerVotedFor = playerName
+		--SendAddonMessage("SLC", "voteplayer:" .. playerName, "OFFICER")
+		SendAddonMessage("SLC", "voteplayer:" .. playerName, "WHISPER","Hildigunnur")
 	end
 end
 
@@ -817,7 +929,8 @@ function SLCRolls:UpdateRollList()
 		else
 			texture:Show()
 			-- the table with all the icon paths for that spec
-			local specIconsTable = ShiningLootCouncil.specIcons[ShiningLootCouncil.raidSpecs[playerName][math.ceil(#ShiningLootCouncil.raidSpecs[playerName]/2)]]
+			local class = self:GetPlayerClass(i)
+			local specIconsTable = ShiningLootCouncil.specIcons[class][ShiningLootCouncil.raidSpecs[playerName][math.ceil(#ShiningLootCouncil.raidSpecs[playerName]/2)]]
 			texture:SetTexture(specIconsTable[math.ceil(#specIconsTable/2)],true)
 			texture:SetSize(16,16)
 			texture:SetTexCoordModifiesRect(false) -- hmm
@@ -878,9 +991,6 @@ function SLCRolls:UpdateRollList()
 		elseif (self:GetPlayerItemRarity(i) == 2) then
 			playerItemLabel:SetText("|cff1eff00" .. playerItem)
 		end
-
-		-- set the item level difference's color
-		-- todo
 		
 		rollFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -totalHeight)
 		rollFrame:SetPoint("RIGHT", scrollChild, "RIGHT", 0, 0)
@@ -997,10 +1107,16 @@ function ShiningLootCouncil:UpdateCurrentItem()
 		local currentItemTexture = getglobal("ShiningLootCouncilMain_CurrentItemTexture")
 		currentItemTexture:SetTexture(itemTexture)
 
-		SLCTable.itemlevel = SLCTable:GetItemIlvl(self.currentItemIndex) or 0
-		getglobal("ShiningLootCouncilMain_CurrentItemIlvl"):SetText("ilvl: " .. SLCTable.itemlevel)
+		SLCTable.itemlevel = SLCTable:GetItemLevel(self.currentItemIndex) or 0
+		local ilvlTexture = getglobal("ShiningLootCouncilMain_CurrentItemIlvl")
+		ilvlTexture:SetText("ilvl: " .. SLCTable.itemlevel)
+
+		SLCTable.currItemName = SLCTable:GetItemName(self.currentItemIndex)
 
 		self:DebugPrint("Changed item link")
+
+		--SendAddonMessage("SLC", "updatecurrentitem:"..itemLinkLabel..":"..itemLink..":"..currentItemTexture..":"..itemTexture..":"..SLCTable.itemLevel..":"..ilvlTexture..":"..SLCTable.currItemName, "OFFICER")
+		--SendAddonMessage("SLC", "updatecurrentitem:"..itemLinkLabel..":"..itemLink..":"..currentItemTexture..":"..itemTexture..":"..SLCTable.itemLevel..":"..SLCTable.currItemName, "WHISPER", "Hildigunnur")
 	else
 		self:DebugPrint("Item doesn't exist")
 	end
@@ -1009,6 +1125,12 @@ end
 
 function SLCTable:ItemExists(index)
 	return self.loot[index] ~= nil
+end
+
+function SLCTable:GetItemName(index)
+	if index and self.loot and self.loot[index] and self.loot[index].itemName then
+		return self.loot[index].itemName
+	end
 end
 
 function SLCTable:GetItemLink(index)
@@ -1021,7 +1143,7 @@ function SLCTable:GetItemTexture(index)
 	return self.loot[index].itemTexture
 end
 
-function SLCTable:GetItemIlvl(index)
+function SLCTable:GetItemLevel(index)
 	return self.loot[index].ilvl
 end
 
@@ -1036,11 +1158,14 @@ function SLCTable:AddItem(itemLink)
 	if (itemRarity < lootThreshold) then
 		--return
 	end
-	self.lootCount = self.lootCount + 1
+	self.lootCount 							= self.lootCount + 1
 	self.loot[self.lootCount] 				= {}
 	self.loot[self.lootCount].itemLink 		= itemLink
+	self.loot[self.lootCount].itemName 		= itemName
 	self.loot[self.lootCount].itemTexture 	= itemTexture
 	self.loot[self.lootCount].ilvl 			= itemLevel
+	--SendAddonMessage("SLC", "slctableadditem:" .. self.loot[self.lootCount].itemLink .. ":" .. self.loot[self.lootCount].itemName .. ":" .. self.loot[self.lootCount].itemTexture .. ":" .. self.loot[self.lootCount].ilvl, "OFFICER")
+	SendAddonMessage("SLC", "slctableadditem:" .. self.loot[self.lootCount].itemLink .. ":" .. self.loot[self.lootCount].itemName .. ":" .. self.loot[self.lootCount].itemTexture .. ":" .. self.loot[self.lootCount].ilvl, "WHISPER", "Hildigunnur")
 	ShiningLootCouncil:DebugPrint("New loot count: " .. self.lootCount)
 end
 
@@ -1058,6 +1183,7 @@ function ShiningLootCouncil:AnnounceMainSpecClicked(buttonFrame)
 	local itemLink = SLCTable:GetItemLink(self.currentItemIndex)
 	if not itemLink then return end
 	SLCRolls:ClearRolls()
+	SendAddonMessage("SLC", "clearrolls", "RAID")
 	self:Speak("Link your current item if you need " .. itemLink .. ", MAIN SPEC")
 end
 
@@ -1065,6 +1191,7 @@ function ShiningLootCouncil:AnnounceOffSpecClicked(buttonFrame)
 	local itemLink = SLCTable:GetItemLink(self.currentItemIndex)
 	if not itemLink then return end
 	SLCRolls:ClearRolls()
+	SendAddonMessage("SLC", "clearrolls", "RAID")
 	self:Speak("Link your current item if you need " .. itemLink .. ", OFF SPEC")
 end
 
@@ -1072,6 +1199,7 @@ function ShiningLootCouncil:AnnounceNoSpecClicked(buttonFrame)
 	local itemLink = SLCTable:GetItemLink(self.currentItemIndex)
 	if not itemLink then return end
 	SLCRolls:ClearRolls()
+	SendAddonMessage("SLC", "clearrolls", "RAID")
 	self:Speak("Link your current item if you need " .. itemLink .. ", for DISENCHANT")
 end
 
@@ -1086,6 +1214,7 @@ end
 
 function ShiningLootCouncil:ClearRollList(buttonFrame)
 	SLCRolls:ClearRolls()
+	SendAddonMessage("SLC", "clearrolls", "RAID")
 end
 
 function ShiningLootCouncil:CountdownClicked(buttonFrame)
@@ -1103,11 +1232,10 @@ function ShiningLootCouncil:CollectInfo()
 
 	local inRaid = false
 	for i = 1, #self.raids do
-		if self.raids[i] == zone then inRaid = true break end
+		if (self.raids[i] == zone or UnitName("target") == "Doom Lord Kazzak" or UnitName("target") == "Doomwalker" or UnitName("targettarget") == "Doom Lord Kazzak" or UnitName("targettarget") == "Doomwalker") then inRaid = true break end
 	end
 
 	if not inRaid then
-		--self:Print("not collecting info")
 		return false
 	end
 
@@ -1149,6 +1277,16 @@ function ShiningLootCouncil:OnUpdate()
 			ShiningLootCouncil.inspectIndex = 0
 		end
 	end
+
+	-- version querying
+	if GetTime() - 1 >= lastVersionQuery and versionQuerying and (notifiedNewVersion ~= true or (todaysDate ~= notifiedNewVersionDate)) then
+		versionQuerying = false
+		if VERSION < highestV then
+			ShiningLootCouncil:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")
+		end
+		notifiedNewVersion = true
+		notifiedNewVersionDate = date("%m%d")
+	end
 end
 
 function ShiningLootCouncil:Speak(str)
@@ -1173,7 +1311,7 @@ function ShiningLootCouncil:PlayerIsInARaid()
 	return GetNumRaidMembers() ~= 0
 end
 
-function ShiningLootCouncil:PlayerIsMasterLooter()		
+function ShiningLootCouncil:PlayerIsMasterLooter()
 	local lootMethod, masterLooterPartyID, masterLooterRaidID = GetLootMethod()
 	if (lootMethod ~= "master") then
 		return false
