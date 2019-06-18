@@ -538,6 +538,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 
 		if totalPoints < 61 then return end
 
+		-- stop receiving inspect data from the player
 		ClearInspectPlayer()
 
 		if self.raidSpecs and self.inspectTargetName and specName and specIcon then
@@ -774,7 +775,7 @@ end
 -- Function taken from ElvUI tooltip.lua
 function SLCTable:GetAllPlayersIlvl()
 	for i = 1, 40 do
-		self:GetPlayerIlvl("raid"..i)
+		self:GetUnitIlvl("raid"..i)
 	end
 
 	if #SLCTable.itemlevels >= 25 then
