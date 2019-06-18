@@ -13,7 +13,6 @@ todaysDate = date("%m%d")
 ShiningLootCouncil = {
 	frame = nil,
 	constFrame = nil,
-	debugging = nil, 
 	countdownRange = 10, 
 	countdownRunning = false,
     disenchant = nil,
@@ -222,7 +221,7 @@ function ShiningLootCouncil:Trim(str)
 end
 
 function ShiningLootCouncil:DebugPrint(str)
-	if (self.debugging) then
+	if (debugging) then
 		DEFAULT_CHAT_FRAME:AddMessage("|cFF15FF15" .. str .. "|r")
 	end
 end
@@ -280,49 +279,10 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 	else
 		local canInspect = CheckInteractDistance(unit, 1); -- check if we're close enough to inspect them.
 		if canInspect and CanInspect(unit) then
-			--self:Print("querying for inspection on " .. unit)
 			self.queryingPlayer = true
 			NotifyInspect(unit)
 		end
 	end
-
-
-	--Print(table.concat(talents, "/"));
-
-	--[[local nums = {string.split("/", talents)};
-	Print(nums)
-	if(table.getn(nums) ~= 3) then return talents; end
-	
-	--if(not WIM_SpellTree[WIM_Windows[theUser].class]) then return talents; end
-	
-	local classTree = WIM_SpellTree[WIM_Windows[theUser].class];
-	
-	if(talents == "0/0/0") then return _G.NONE or "None"; end
-	
-	--calculate which order the tabs should be in; in relation to spec.
-	local order = {};
-	local num = "";
-	for i=1,3 do
-		nums[i] = tonumber(nums[i]);
-		num = nums[i];
-		if(string.len(num) == 1) then num = "0"..num; end
-		table.insert(order, num..i);
-	end
-	table.sort(order);
-	
-	local first, second, third = tonumber(string.sub(order[3],-1)), tonumber(string.sub(order[2],-1)), tonumber(string.sub(order[1],-1));
-	
-	if(nums[first]*.75 <= nums[second]) then
-		if(nums[first]*.75 <= nums[third]) then
-			return WIM_SpellTree["Hybrid"]..": "..talents;
-		else
-			return classTree[tostring(first)].."/"..classTree[tostring(second)]..": "..talents;
-		end
-	else
-		return classTree[tostring(first)]..": "..talents;
-	end]]
-
-
 end
 
 function ShiningLootCouncil:GetClassColor(className)
@@ -381,6 +341,7 @@ function ShiningLootCouncil:OnLoad(frame)
 	self.frame = frame
 	self.constFrame = CreateFrame("Frame")
 	
+	self.frame:RegisterEvent("ADDON_LOADED")
 	self.frame:RegisterEvent("LOOT_OPENED")
 	self.frame:RegisterEvent("LOOT_CLOSED")
 	self.frame:RegisterEvent("CHAT_MSG_RAID")
@@ -415,17 +376,20 @@ function ShiningLootCouncil:OnLoad(frame)
     
     UIDropDownMenu_Initialize(self.deDropdownFrame, ShiningLootCouncil.InitializeDropdown);
     UIDropDownMenu_Initialize(self.bankDropdownFrame, ShiningLootCouncil.InitializeDropdown);
-	
-	self:DebugPrint("ShiningLootCouncil loaded")
 end
 
 SLASH_SLC1 = "/slc"
 SlashCmdList["SLC"] = function(msg, editBox)
-    local command, rest = msg:match("^(%S*)%s*(.-)$");
+	local msg = Split(msg)
+	local command = msg[1]
 
-    ShiningLootCouncil:DebugPrint("Command = " .. command or "")
+	if command then
+    	ShiningLootCouncil:DebugPrint("Command = " .. command)
+    else
+    	ShiningLootCouncil:DebugPrint("Command = show")
+    end
 
-    if (command == "show" or command == "") then
+    if (command == nil or command == "show") then
         if (not ShiningLootCouncil.frame:IsShown()) then
             ShiningLootCouncil.frame:Show()
         else
@@ -451,8 +415,35 @@ SlashCmdList["SLC"] = function(msg, editBox)
     	SendAddonMessage("SLC", "versioncheck", "RAID")
     	ShiningLootCouncil:Print("Shining Loot Council Version Check: All raid members")
     	ShiningLootCouncil:Print("--------------------------------")
+    elseif command == "debug" then
+    	if debugging then
+    		debugging = false
+    		debugStr = "Off"
+    		ShiningLootCouncil:Print("SLC: Debugging turned off.")
+    	else
+    		debugging = true
+    		debugStr = "On"
+    		ShiningLootCouncil:Print("SLC: Debugging turned on.")
+    	end
+    elseif command == "threshold" then
+    	if threshold then
+    		threshold = false
+    		thresholdStr = "Off"
+    		ShiningLootCouncil:Print("SLC: Item threshold turned off.")
+    	else
+    		threshold = true
+    		thresholdStr = "On"
+    		ShiningLootCouncil:Print("SLC: Item threshold turned on.")
+    	end
     else
-        ShiningLootCouncil:Print("Acceptable subcommands to /slc:".."\nshow - shows the roll window".."\nhide - hides the roll window")
+        ShiningLootCouncil:Print("Usage: /slc {show | hide | ilvl | talents | versioncheck | debug | threshold}")
+		ShiningLootCouncil:Print("-show: Displays the Loot Council frame.")
+		ShiningLootCouncil:Print("-hide: Hides the Loot Council frame.")
+		ShiningLootCouncil:Print("-ilvl: Prints the item levels of all raid members we've gathered the information for so far.")
+		ShiningLootCouncil:Print("-talents: Prints the talent specs of all raid members we've gathered the information for so far.")
+		ShiningLootCouncil:Print("-versioncheck: Performs a versioncheck for the raid/party and prints which version of SLC each member has.")
+		ShiningLootCouncil:Print("-debug [" .. debugStr .. "]: Enables or disables debugging mode.")
+		ShiningLootCouncil:Print("-threshold [" .. thresholdStr .. "]: Does not show the Loot Council window if an item is below the loot threshold and this value is true. If false then it shows the Loot Council window for every item.")
     end
 end
 
@@ -483,7 +474,20 @@ function ShiningLootCouncil:AwardLootClicked(buttonFrame)
 end
 
 function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-	if (event == "LOOT_OPENED") then
+	if event == "ADDON_LOADED" and arg1 and arg1 == "ShiningLootCouncil" then
+		self:Print("ShiningLootCouncil v" .. VERSION .. " loaded. Type '/slc commands' for options.")
+
+		if threshold == nil then
+			threshold = true
+		end
+		if thresholdStr == nil then
+			thresholdStr = "On"
+		end
+		if debugging == nil then
+			debugging = false
+			debugStr = "Off"
+		end
+	elseif (event == "LOOT_OPENED") then
 		if (self:PlayerIsMasterLooter()) then
 			self:DebugPrint("Loot was opened and the player is the master looter.")
 			self:FillLootTable()
@@ -1162,8 +1166,8 @@ end
 function SLCTable:AddItem(itemLink)
 	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture = GetItemInfo(itemLink)
 	local lootThreshold = GetLootThreshold()
-	if (itemRarity < lootThreshold) then
-		--return
+	if (itemRarity < lootThreshold and threshold) then
+		return
 	end
 	self.lootCount 							= self.lootCount + 1
 	self.loot[self.lootCount] 				= {}
@@ -1286,7 +1290,7 @@ function ShiningLootCouncil:OnUpdate()
 	end
 
 	-- version querying
-	if GetTime() - 1 >= lastVersionQuery and versionQuerying and (todaysDate ~= notifiedNewVersionDate or notifiedNewVersionDate == nil)) then
+	if GetTime() - 1 >= lastVersionQuery and versionQuerying and (todaysDate ~= notifiedNewVersionDate or notifiedNewVersionDate == nil) then
 		versionQuerying = false
 		if tonumber(VERSION) < highestV then
 			ShiningLootCouncil:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")

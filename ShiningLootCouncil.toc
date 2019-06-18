@@ -5,7 +5,7 @@
 ## Notes: Similar to retail's RCLootCouncil, used for distributing loot in Loot Council raids
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-## SavedVariables: ShiningLootCouncilSettings, notifiedNewVersion, notifiedNewVersionDate
+## SavedVariables: ShiningLootCouncilSettings, notifiedNewVersion, notifiedNewVersionDate,threshold,thresholdStr,debugging,debugStr
 
 ShiningLootCouncil.xml
 Cleanup.lua
