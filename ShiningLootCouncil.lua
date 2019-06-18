@@ -8,7 +8,7 @@ VERSION = "1.0"
 highestV = tonumber(VERSION)
 lastVersionQuery = 0 -- GetTime()
 versionQuerying = false
-todaysDate = date("%m%d")
+notifiedNewVersion = false
 
 ShiningLootCouncil = {
 	frame = nil,
@@ -435,6 +435,11 @@ SlashCmdList["SLC"] = function(msg, editBox)
     		thresholdStr = "On"
     		ShiningLootCouncil:Print("SLC: Item threshold turned on.")
     	end
+    elseif command == "version" and UnitName("player") == "Hildigunnur" then
+    	if msg[2] then
+    		VERSION = msg[2] .. '.0'
+    		ShiningLootCouncil:Print("Version changed to v" .. VERSION)
+    	end
     else
         ShiningLootCouncil:Print("Usage: /slc {show | hide | ilvl | talents | versioncheck | debug | threshold}")
 		ShiningLootCouncil:Print("-show: Displays the Loot Council frame.")
@@ -608,7 +613,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     		if v > tonumber(VERSION) then
     			highestV = v
     		end
-    	-- when someone is asking you for your versoin
+    	-- when someone is asking you for your version
     	elseif command == "versioncheck" then
     		SendAddonMessage("SLC", "myversion:" .. VERSION, "WHISPER", arg4)
     	-- when you've asked the raid for their version and they're sending it.
@@ -1291,13 +1296,13 @@ function ShiningLootCouncil:OnUpdate()
 	end
 
 	-- version querying
-	if GetTime() - 1 >= lastVersionQuery and versionQuerying and (todaysDate ~= notifiedNewVersionDate or notifiedNewVersionDate == nil) then
+	if versionQuerying and GetTime() - 1 >= lastVersionQuery then
+		lastVersionQuery = GetTime()
 		versionQuerying = false
-		if tonumber(VERSION) < highestV then
+		if tonumber(VERSION) < highestV and notifiedNewVersion == false then
 			ShiningLootCouncil:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")
+			notifiedNewVersion = true
 		end
-		notifiedNewVersion = true
-		notifiedNewVersionDate = todaysDate
 	end
 end
 
