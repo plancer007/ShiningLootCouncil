@@ -22,3 +22,5 @@ The addon GearScore and other addons that inspect targets that you hover over (t
 -When a tier item is linked link its real item lvl value instead of the token's ilvl, and also link which classes can use the token when announcing to roll for the item.
 
 -Figure out a way to allow players to use gearscore addons and whatnot and still have the addon work. Maybe hooksecurefunc?
+
+-Send addon messages to get players talents/ilvl and use whichever has the highest count from the players.

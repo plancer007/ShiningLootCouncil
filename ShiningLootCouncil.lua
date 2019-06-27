@@ -24,12 +24,12 @@ ShiningLootCouncil = {
     bankDropdownFrame = nil,
     settingsDropDownFrame = nil,
     settingsMenuList = nil,
-    updateFrequency = 1, -- how often to get player's gear data (in seconds)
+    updateFrequency = 60, -- how often to get player's gear data (in seconds)
     lastUpdate = 0,
     starTexture = "Interface\\TargetingFrame\\UI-RaidTargetingIcons",
     queryingPlayer = false,
     inCombat = false,
-    inspectFrequency = 1, -- how often to inspect the players talents
+    inspectFrequency = 60, -- how often (in seconds) to inspect the players talents
     lastInspect = 0,
     inspectIndex = 0,
     inspectTargetName,
@@ -203,6 +203,10 @@ SLCTable = {lootCount = 0, loot = {}, itemlevels = {}, itemlevel = 0, currItemNa
 
 SLCRolls = {itemCount = 0, items = {}, playerVotedFor = nil, yCoordinate = 10}
 
+function garbage()
+	collectgarbage("collect")
+end
+
 function ShiningLootCouncil:Split(inputstr, sep)
     if sep == nil then
         sep = "%s"
@@ -241,7 +245,7 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 		local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
 
 		for i = 1, MAX_TALENT_TABS do
-			local name, icon, pointsSpent = GetTalentTabInfo(i, isInspect)
+			local name, icon, pointsSpent = GetTalentTabInfo(i,false)
 			totalPoints = totalPoints + pointsSpent
 			if maxPoints < pointsSpent then
 				maxPoints = pointsSpent
@@ -279,6 +283,8 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 			end
 		end
 	else
+		self.inspectTargetName = name
+		self.inspectTargetClass = c
 		local canInspect = CheckInteractDistance(unit, 1); -- check if we're close enough to inspect them.
 		if canInspect and CanInspect(unit) then
 			self.queryingPlayer = true
@@ -445,6 +451,10 @@ SlashCmdList["SLC"] = function(msg, editBox)
     elseif command == "fix" then
     	SLCRolls:FixRollList()
     	ShiningLootCouncil:DebugPrint("Fixed roll list, hopefully.")
+    elseif command == "time" then
+    	ShiningLootCouncil:Print("This is how long it takes for the addon's OnUpdate function to run (in seconds). This revision means the addon right now, last revision means the last addon's version and hopefully this revision is faster.")
+    	ShiningLootCouncil:Print("This revision: " .. longest)
+    	ShiningLootCouncil:Print("Last revision: " .. secondLongest)
     else
         ShiningLootCouncil:Print("Usage: /slc {show | hide | ilvl | talents | versioncheck | debug | threshold}")
 		ShiningLootCouncil:Print("-show: Displays the Loot Council frame.")
@@ -484,6 +494,7 @@ end
 function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 	if event == "ADDON_LOADED" and arg1 and arg1 == "ShiningLootCouncil" then
 		self.playername = UnitName("player")
+		self:PlayerTalentSpec(self.playername)
 		self:Print("ShiningLootCouncil v" .. VERSION .. " loaded. Type '/slc commands' for options.")
 
 		if threshold == nil then
@@ -495,6 +506,12 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 		if debugging == nil then
 			debugging = false
 			debugStr = "Off"
+		end
+		if longest == nil then
+			longest = 0
+		end
+		if secondLongest == nil then
+			secondLongest = 0
 		end
 	elseif (event == "LOOT_OPENED") then
 		if (self:PlayerIsMasterLooter()) then
@@ -516,7 +533,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 			self.frame:Show()
 		else
 			self.frame:Hide()
-			collectgarbage("collect")
+			garbage()
 		end
 	elseif event == "CHAT_MSG_RAID_LEADER" or event == "CHAT_MSG_RAID" then
 		if SLCTable.lootCount > 0 then
@@ -533,6 +550,7 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     elseif event == "INSPECT_TALENT_READY" then
     	local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
     	local c = self.inspectTargetClass
+    	local n = self.inspectTargetName
 
 		for i = 1, MAX_TALENT_TABS do
 			local name, icon, pointsSpent = GetTalentTabInfo(i, true)
@@ -550,12 +568,12 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 		-- stop receiving inspect data from the player
 		ClearInspectPlayer()
 
-		if self.raidSpecs and self.inspectTargetName and specName and specIcon then
-			if not self.raidSpecs[self.inspectTargetName] then
-				self.raidSpecs[self.inspectTargetName] = {}
+		if self.raidSpecs and n and specName and specIcon then
+			if not self.raidSpecs[n] then
+				self.raidSpecs[n] = {}
 			end
-			--self.raidSpecs[self.inspectTargetName] = specName
-			--table.insert(self.raidSpecs[self.inspectTargetName], specName)
+			--self.raidSpecs[n] = specName
+			--table.insert(self.raidSpecs[n], specName)
 			if specName and specIcon then
 				local valid = false
 				for class,specs in pairs(self.classSpecs) do
@@ -568,10 +586,10 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 				end
 
 				if valid then
-					if not self.raidSpecs[self.inspectTargetName] then
-						self.raidSpecs[self.inspectTargetName] = {}
+					if not self.raidSpecs[n] then
+						self.raidSpecs[n] = {}
 					end
-					table.insert(self.raidSpecs[self.inspectTargetName], specName)
+					table.insert(self.raidSpecs[n], specName)
 
 					--[[if not self.specIcons[specName] then
 						self.specIcons[specName] = {}
@@ -789,7 +807,7 @@ function SLCTable:GetAllPlayersIlvl()
 	end
 
 	if #SLCTable.itemlevels >= 25 then
-		ShiningLootCouncil.updateFrequency = 60
+		ShiningLootCouncil.updateFrequency = 600
 	end
 end
 
@@ -1270,7 +1288,7 @@ function ShiningLootCouncil:CollectInfo()
 		return false
 	end
 
-	if self.debugging then return true end
+	if debugging then return true end
 
 	local zone = GetRealZoneText()
 
@@ -1280,15 +1298,16 @@ function ShiningLootCouncil:CollectInfo()
 	end
 
 	if not inRaid then
-		--return false
+		return false
 	end
 
 	return true
 end
 
 function ShiningLootCouncil:OnUpdate()
+	local now = GetTime()
 	if (ShiningLootCouncil.countdownRunning) then
-		local currentCountdownPosition = math.ceil(ShiningLootCouncil.countdownRange - GetTime() + ShiningLootCouncil.countdownStartTime)
+		local currentCountdownPosition = math.ceil(ShiningLootCouncil.countdownRange - now + ShiningLootCouncil.countdownStartTime)
 		if (currentCountdownPosition < 1) then
 			currentCountdownPosition = 1
 		end
@@ -1303,33 +1322,39 @@ function ShiningLootCouncil:OnUpdate()
 			ShiningLootCouncil.countdownRunning = false
 		end
 	end
-	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.updateFrequency < (GetTime() - ShiningLootCouncil.lastUpdate) then
-		ShiningLootCouncil.lastUpdate = GetTime()
+	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.updateFrequency < (now - ShiningLootCouncil.lastUpdate) then
+		ShiningLootCouncil.lastUpdate = now
 		SLCTable:GetAllPlayersIlvl()
-		--ShiningLootCouncil:Print("Getting ilvl")
+		ShiningLootCouncil:DebugPrint("Getting ilvl")
 	end
 
-	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.inspectFrequency < (GetTime() - ShiningLootCouncil.lastInspect) and ShiningLootCouncil.queryingPlayer == false then
+	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.inspectFrequency < (now - ShiningLootCouncil.lastInspect) and ShiningLootCouncil.queryingPlayer == false then
 		ShiningLootCouncil.inspectIndex = ShiningLootCouncil.inspectIndex + 1
 		if UnitName("raid"..ShiningLootCouncil.inspectIndex) then
-			ShiningLootCouncil.inspectTargetName = UnitName("raid"..ShiningLootCouncil.inspectIndex)
-			ShiningLootCouncil.inspectTargetClass = UnitClass("raid"..ShiningLootCouncil.inspectIndex)
+			--ShiningLootCouncil.inspectTargetName = UnitName("raid"..ShiningLootCouncil.inspectIndex)
+			--ShiningLootCouncil.inspectTargetClass = UnitClass("raid"..ShiningLootCouncil.inspectIndex)
 			ShiningLootCouncil:PlayerTalentSpec("raid"..ShiningLootCouncil.inspectIndex)
-			--ShiningLootCouncil:Print("getting talents")
+			ShiningLootCouncil:DebugPrint("getting talents")
 		else
-			ShiningLootCouncil.lastInspect = GetTime()
+			ShiningLootCouncil.lastInspect = now
 			ShiningLootCouncil.inspectIndex = 0
+			garbage()
 		end
 	end
 
 	-- version querying
-	if versionQuerying and GetTime() - 1 >= lastVersionQuery then
-		lastVersionQuery = GetTime()
+	if versionQuerying and now - 1 >= lastVersionQuery then
+		lastVersionQuery = now
 		versionQuerying = false
 		if tonumber(VERSION) < highestV and notifiedNewVersion == false then
 			ShiningLootCouncil:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")
 			notifiedNewVersion = true
 		end
+	end
+	local e = GetTime()
+	if e - now > longest then
+		secondLongest = longest
+		longest = e - now
 	end
 end
 
