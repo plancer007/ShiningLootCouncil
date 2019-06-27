@@ -812,11 +812,11 @@ function SLCTable:GetAllPlayersIlvl()
 	for i = 1, 40 do
 		self:GetUnitIlvl("raid"..i)
 	end
-	if allValid then
+	--[[if allValid then
 		ShiningLootCouncil:DebugPrint("not updating anymore")
 		ShiningLootCouncil.updating = false
 		garbage()
-	end
+	end]]
 end
 
 function SLCTable:GetUnitIlvl(unit)
@@ -840,9 +840,9 @@ function SLCTable:GetUnitIlvl(unit)
 			self.itemlevels[player] = {}
 		end
 		table.insert(self.itemlevels[player],tonumber(math.floor(total)))
-		if #self.itemlevels[player] < 100 then
+		--[[if #self.itemlevels[player] < 100 then
 			allValid = false
-		end
+		end]]
 	end
 end
 
