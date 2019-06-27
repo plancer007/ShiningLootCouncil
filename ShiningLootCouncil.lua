@@ -14,22 +14,24 @@ ShiningLootCouncil = {
 	playername,
 	frame = nil,
 	constFrame = nil,
-	countdownRange = 10, 
+	countdownRange = 10,
 	countdownRunning = false,
     disenchant = nil,
     bank = nil,
     dropdownData = {}, --TODO: change all instanaces of dropdown/Dropdown to dropDown/DropDown to match conventions
     dropdownGroupData = {},
-    deDropdownFrame = nil, 
+    deDropdownFrame = nil,
     bankDropdownFrame = nil,
     settingsDropDownFrame = nil,
     settingsMenuList = nil,
-    updateFrequency = 60, -- how often to get player's gear data (in seconds)
+    updating = true,
+    updateFrequency = 1, -- how often to get player's ilvl (in seconds)
     lastUpdate = 0,
     starTexture = "Interface\\TargetingFrame\\UI-RaidTargetingIcons",
+    allValid = true,
     queryingPlayer = false,
     inCombat = false,
-    inspectFrequency = 60, -- how often (in seconds) to inspect the players talents
+    inspectFrequency = 1, -- how often (in seconds) to inspect the players talents
     lastInspect = 0,
     inspectIndex = 0,
     inspectTargetName,
@@ -544,6 +546,9 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
     elseif (event == "RAID_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD") then
     	self.inspectIndex = 0
         self:UpdateDropdowns()
+        self.updateFrequency = 1
+        self.inspectFrequency = 1
+        self.updating = true
         SLCTable:GetUnitIlvl("player")
         --version query
         SendAddonMessage("SLC", "version:" .. tonumber(VERSION), "RAID")
@@ -710,17 +715,17 @@ function ShiningLootCouncil:HandlePossibleRoll(message,sender)
 			if itemName == SLCTable.currItemName then return end
 
 			if sender ~= nil and itemLink ~= nil and itemRarity > 1 then
+				local ilvltable = SLCTable.itemlevels[sender]
 				self:DebugPrint(sender .. " linked " .. itemLink)
 				guildRankName = (select(2,GetGuildInfo(sender)) or "not found")
-				self:DebugPrint("Name: " .. sender .. ". guildrank: " .. (guildRankName or "none") .. ". Role: " .. SLCRolls:GetPlayerRole(sender) .. ". ilvl: " .. SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] .. ". Note: " .. msg)
+				self:DebugPrint("Name: " .. sender .. ". guildrank: " .. (guildRankName or "none") .. ". Role: " .. SLCRolls:GetPlayerRole(sender) .. ". ilvl: " .. ilvltable[math.ceil(#ilvltable/2)] .. ". Note: " .. msg)
 				self:DebugPrint("Item: " .. itemName .. ". Rarity: " .. itemRarity .. ". Ilvl: " .. itemLevel)
 				player = {
 					name = sender or "not found",
 					guildRank = guildRankName,
 					role = SLCRolls:GetPlayerRole(sender) or "not found", 
 					votes = 0,
-					--ilvl = SLCTable.itemlevels[sender] or 0,
-					ilvl = SLCTable.itemlevels[sender][math.ceil(#SLCTable.itemlevels[sender]/2)] or 0,
+					ilvl = ilvltable[math.ceil(#ilvltable/2)] or 0,
 					note = msg or "",
 					class = UnitClass(sender)
 				}
@@ -802,12 +807,15 @@ end
 
 -- Function taken from ElvUI tooltip.lua
 function SLCTable:GetAllPlayersIlvl()
+	allValid = true
+	self:GetUnitIlvl(ShiningLootCouncil.playername)
 	for i = 1, 40 do
 		self:GetUnitIlvl("raid"..i)
 	end
-
-	if #SLCTable.itemlevels >= 25 then
-		ShiningLootCouncil.updateFrequency = 600
+	if allValid then
+		ShiningLootCouncil:DebugPrint("not updating anymore")
+		ShiningLootCouncil.updating = false
+		garbage()
 	end
 end
 
@@ -832,6 +840,9 @@ function SLCTable:GetUnitIlvl(unit)
 			self.itemlevels[player] = {}
 		end
 		table.insert(self.itemlevels[player],tonumber(math.floor(total)))
+		if #self.itemlevels[player] < 100 then
+			allValid = false
+		end
 	end
 end
 
@@ -1284,7 +1295,7 @@ function ShiningLootCouncil:CountdownClicked(buttonFrame)
 end
 
 function ShiningLootCouncil:CollectInfo()
-	if self.inCombat then
+	if self.inCombat or not self.updating then
 		return false
 	end
 
@@ -1298,47 +1309,50 @@ function ShiningLootCouncil:CollectInfo()
 	end
 
 	if not inRaid then
-		return false
+		--return false
 	end
 
 	return true
 end
 
 function ShiningLootCouncil:OnUpdate()
+	local self = ShiningLootCouncil
 	local now = GetTime()
-	if (ShiningLootCouncil.countdownRunning) then
-		local currentCountdownPosition = math.ceil(ShiningLootCouncil.countdownRange - now + ShiningLootCouncil.countdownStartTime)
+	if (self.countdownRunning) then
+		local currentCountdownPosition = math.ceil(self.countdownRange - now + self.countdownStartTime)
 		if (currentCountdownPosition < 1) then
 			currentCountdownPosition = 1
 		end
-		local i = ShiningLootCouncil.countdownLastDisplayed - 1
+		local i = self.countdownLastDisplayed - 1
 		while (i >= currentCountdownPosition) do
-			ShiningLootCouncil:Speak(i)
+			self:Speak(i)
 			i = i - 1
 		end
 		
-		ShiningLootCouncil.countdownLastDisplayed = currentCountdownPosition
+		self.countdownLastDisplayed = currentCountdownPosition
 		if (currentCountdownPosition <= 1) then
-			ShiningLootCouncil.countdownRunning = false
+			self.countdownRunning = false
 		end
 	end
-	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.updateFrequency < (now - ShiningLootCouncil.lastUpdate) then
-		ShiningLootCouncil.lastUpdate = now
-		SLCTable:GetAllPlayersIlvl()
-		ShiningLootCouncil:DebugPrint("Getting ilvl")
-	end
+	if self:CollectInfo() then
+		-- get talents
+		if self.inspectFrequency < (now - self.lastInspect) and self.queryingPlayer == false then
+			self.inspectIndex = self.inspectIndex + 1
+			self:PlayerTalentSpec(self.playername)
+			if UnitName("raid"..self.inspectIndex) then
+				self:PlayerTalentSpec("raid"..self.inspectIndex)
+				--self:DebugPrint("getting talents")
+			else
+				self.lastInspect = now
+				self.inspectIndex = 0
+			end
+		end
 
-	if ShiningLootCouncil:CollectInfo() and ShiningLootCouncil.inspectFrequency < (now - ShiningLootCouncil.lastInspect) and ShiningLootCouncil.queryingPlayer == false then
-		ShiningLootCouncil.inspectIndex = ShiningLootCouncil.inspectIndex + 1
-		if UnitName("raid"..ShiningLootCouncil.inspectIndex) then
-			--ShiningLootCouncil.inspectTargetName = UnitName("raid"..ShiningLootCouncil.inspectIndex)
-			--ShiningLootCouncil.inspectTargetClass = UnitClass("raid"..ShiningLootCouncil.inspectIndex)
-			ShiningLootCouncil:PlayerTalentSpec("raid"..ShiningLootCouncil.inspectIndex)
-			ShiningLootCouncil:DebugPrint("getting talents")
-		else
-			ShiningLootCouncil.lastInspect = now
-			ShiningLootCouncil.inspectIndex = 0
-			garbage()
+		-- get item lvls
+		if self.updateFrequency < (now - self.lastUpdate) then
+			self.lastUpdate = now
+			SLCTable:GetAllPlayersIlvl()
+			--self:DebugPrint("Getting ilvl")
 		end
 	end
 
@@ -1347,7 +1361,7 @@ function ShiningLootCouncil:OnUpdate()
 		lastVersionQuery = now
 		versionQuerying = false
 		if tonumber(VERSION) < highestV and notifiedNewVersion == false then
-			ShiningLootCouncil:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")
+			self:Print("|cffff0000>>> Your ShiningLootCouncil is out of date. Newest version is v" .. highestV .. " downloadable at https://github.com/Kristoferhh/ShiningLootCouncil <<<")
 			notifiedNewVersion = true
 		end
 	end
