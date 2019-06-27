@@ -1227,7 +1227,7 @@ function SLCTable:AddItem(itemLink)
 	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture = GetItemInfo(itemLink)
 	local lootThreshold = GetLootThreshold()
 	if (itemRarity < lootThreshold and threshold) then
-		--return
+		return
 	end
 	self.lootCount 							= self.lootCount + 1
 	self.loot[self.lootCount] 				= {}
@@ -1302,17 +1302,11 @@ function ShiningLootCouncil:CollectInfo()
 	if debugging then return true end
 
 	local zone = GetRealZoneText()
-
-	local inRaid = false
 	for i = 1, #self.raids do
-		if (self.raids[i] == zone or UnitName("target") == "Doom Lord Kazzak" or UnitName("target") == "Doomwalker" or UnitName("targettarget") == "Doom Lord Kazzak" or UnitName("targettarget") == "Doomwalker") then inRaid = true break end
+		if (self.raids[i] == zone or UnitName("target") == "Doom Lord Kazzak" or UnitName("target") == "Doomwalker" or UnitName("targettarget") == "Doom Lord Kazzak" or UnitName("targettarget") == "Doomwalker") then return true end
 	end
 
-	if not inRaid then
-		--return false
-	end
-
-	return true
+	return false
 end
 
 function ShiningLootCouncil:OnUpdate()
