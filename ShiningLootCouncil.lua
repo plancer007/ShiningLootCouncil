@@ -276,11 +276,6 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 					self.raidSpecs[name] = {}
 				end
 				table.insert(self.raidSpecs[name], specName)
-
-				--[[if not self.specIcons[c][specName] then
-					self.specIcons[c][specName] = {}
-				end]]
-				--self.specIcons[specName] = specIcon
 				table.insert(self.specIcons[c][specName], specIcon)
 			end
 		end
@@ -595,11 +590,6 @@ function ShiningLootCouncil:OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, a
 						self.raidSpecs[n] = {}
 					end
 					table.insert(self.raidSpecs[n], specName)
-
-					--[[if not self.specIcons[specName] then
-						self.specIcons[specName] = {}
-					end]]
-					--self.specIcons[specName] = specIcon
 					table.insert(self.specIcons[c][specName], specIcon)
 				end
 			end
@@ -1253,7 +1243,7 @@ end
 function ShiningLootCouncil:AnnounceMainSpecClicked(buttonFrame)
 	local itemLink = SLCTable:GetItemLink(self.currentItemIndex)
 	if not itemLink then return end
-	--SLCRolls:ClearRolls()
+	SLCRolls:ClearRolls()
 	SendAddonMessage("SLC", "clearrolls", "RAID")
 	self:Speak("Link your current item if you need " .. itemLink .. ", MAIN SPEC")
 end
