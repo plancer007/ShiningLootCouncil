@@ -403,18 +403,22 @@ SlashCmdList["SLC"] = function(msg, editBox)
     elseif (command == "hide") then
         ShiningLootCouncil.frame:Hide()
     elseif command == "talents" then
-    	local longest = 0
+    	local longest,c = 0,0
     	for k,v in pairs(ShiningLootCouncil.raidSpecs) do
     		if #v > longest then longest = #v end
+    		c = c + 1
     		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
+    	ShiningLootCouncil:Print("Players: " .. c)
     	ShiningLootCouncil:DebugPrint("Length of talents: " .. longest)
     elseif command == "ilvl" then
-    	local longest = 0
+    	local longest,c = 0,0
     	for k,v in pairs(SLCTable.itemlevels) do
     		if #v > longest then longest = #v end
+    		c = c + 1
     		ShiningLootCouncil:Print(k .. " - " .. v[math.ceil(#v/2)])
     	end
+    	ShiningLootCouncil:Print("Players: " .. c)
     	ShiningLootCouncil:DebugPrint("Length of ilvls: " .. longest)
     elseif command == "versioncheck" then
     	SendAddonMessage("SLC", "versioncheck", "RAID")
