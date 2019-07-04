@@ -1331,12 +1331,12 @@ function ShiningLootCouncil:OnUpdate()
 	if self:CollectInfo() then
 		-- get talents
 		if self.inspectFrequency < (now - self.lastInspect) then
+			self:DebugPrint("getting talents")
 			for i = 1, 40 do
 				--self.inspectIndex = self.inspectIndex + 1
 				if UnitName("raid"..i) then
 					while self.queryingPlayer do end
 					self:PlayerTalentSpec("raid"..i)
-					self:DebugPrint("getting talents")
 				end
 			end
 			self.lastInspect = now
