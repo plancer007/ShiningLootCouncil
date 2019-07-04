@@ -201,7 +201,7 @@ SlotName = {
 -- loot 		info about the loot from the mob
 -- itemlevels 	keeps the itemlevels of players in the raid saved in a table
 -- itemlevel 	the itemlevel of the current item that's being rolled for.
-SLCTable = {lootCount = 0, loot = {}, itemlevels = {}, itemlevel = 0, currItemName}
+SLCTable = {lootCount = 0, loot = {}, itemlevels = {}, itemlevel = 0, currItemName, playerSpecs = {}}
 
 SLCRolls = {itemCount = 0, items = {}, playerVotedFor = nil, yCoordinate = 10}
 
@@ -244,7 +244,6 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 	local name = UnitName(unit)
 	local c = UnitClass(unit)
 	if name == self.playername then
-		self.queryingPlayer	= true
 		local totalPoints, maxPoints, specIdx, specName, specIcon = 0,0,0
 
 		for i = 1, MAX_TALENT_TABS do
@@ -280,12 +279,11 @@ function ShiningLootCouncil:PlayerTalentSpec(unit)
 				table.insert(self.specIcons[c][specName], specIcon)
 			end
 		end
-		self.queryingPlayer	= false
 	else
+		self.inspectTargetName = name
+		self.inspectTargetClass = c
 		local canInspect = CheckInteractDistance(unit, 1); -- check if we're close enough to inspect them.
 		if canInspect and CanInspect(unit) then
-			self.inspectTargetName = name
-			self.inspectTargetClass = c
 			self.queryingPlayer = true
 			NotifyInspect(unit)
 		end
@@ -803,7 +801,7 @@ end
 
 -- Function taken from ElvUI tooltip.lua
 function SLCTable:GetAllPlayersIlvl()
-	--allValid = true
+	allValid = true
 	self:GetUnitIlvl(ShiningLootCouncil.playername)
 	for i = 1, 40 do
 		self:GetUnitIlvl("raid"..i)
@@ -1287,7 +1285,7 @@ end
 function ShiningLootCouncil:CountdownClicked(buttonFrame)
 	self.countdownRunning = true
 	self.countdownStartTime = GetTime()
-	self.countdownLastDisplayed = self.countodwnRange + 1
+	self.countdownLastDisplayed = self.countdownRange + 1
 end
 
 function ShiningLootCouncil:CollectInfo()
@@ -1296,10 +1294,6 @@ function ShiningLootCouncil:CollectInfo()
 	end
 
 	if debugging then return true end
-
-	for i = 1, 25 do
-		if not CheckInteractDistance("raid"..i, 1) then return false end
-	end
 
 	local zone = GetRealZoneText()
 	for i = 1, #self.raids do
@@ -1330,6 +1324,7 @@ function ShiningLootCouncil:OnUpdate()
 	end
 	if self:CollectInfo() then
 		-- get talents
+<<<<<<< HEAD
 		if self.inspectFrequency < (now - self.lastInspect) then
 			self:DebugPrint("getting talents")
 			for i = 1, 40 do
@@ -1338,9 +1333,18 @@ function ShiningLootCouncil:OnUpdate()
 					while self.queryingPlayer do end
 					self:PlayerTalentSpec("raid"..i)
 				end
+=======
+		if self.inspectFrequency < (now - self.lastInspect) and self.queryingPlayer == false then
+			self.inspectIndex = self.inspectIndex + 1
+			self:PlayerTalentSpec(self.playername)
+			if UnitName("raid"..self.inspectIndex) then
+				self:PlayerTalentSpec("raid"..self.inspectIndex)
+				--self:DebugPrint("getting talents")
+			else
+				self.lastInspect = now
+				self.inspectIndex = 0
+>>>>>>> parent of ec52c47... reduce cpu usage
 			end
-			self.lastInspect = now
-			--self.inspectIndex = 0
 		end
 
 		-- get item lvls
@@ -1349,6 +1353,7 @@ function ShiningLootCouncil:OnUpdate()
 			SLCTable:GetAllPlayersIlvl()
 			--self:DebugPrint("Getting ilvl")
 		end
+<<<<<<< HEAD
 
 		local valid = true
 
@@ -1368,6 +1373,8 @@ function ShiningLootCouncil:OnUpdate()
 			self.updating = false
 			self:DebugPrint("Not getting more info")
 		end
+=======
+>>>>>>> parent of ec52c47... reduce cpu usage
 	end
 
 	-- version querying
