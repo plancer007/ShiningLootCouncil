@@ -1354,7 +1354,7 @@ function ShiningLootCouncil:OnUpdate()
 
 		-- check if we've gathered info on all online players in the raid
 		for i = 1, 40 do
-			if UnitName("raid"..i)
+			if UnitName("raid"..i) then
 				if not self.raidSpecs[UnitName("raid"..i)] and select(4,GetRaidRosterInfo(i)) ~= 0 then
 					valid = false
 					break
